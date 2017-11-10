@@ -28,7 +28,6 @@ graphics.off()
 
 # Set Working Directory
 #setwd("~/Documents/Orsay/M2/Data Mining/Divvy_Stations_Trips_2013")
-setwd("~/statML/Projet/ProjetDataMining")
 
 # Chargement des packages
 library("tidyverse")
@@ -39,15 +38,14 @@ library("graphics")
 # II- Importation des donnees
 ################################################################
 
+
+config = read.csv("config.csv")
+
+setwd(toString(  config$loc_dir ))
 # Donnees Stations
- stations <- read.csv("data/Divvy_Stations_Trips_2013/Divvy_Stations_2013.csv", header=T)
-# n_stat = length(stations[,1])
-# Pour le moment je me limite aux donnees sur les trajets
-
+stations <- read.csv(toString(config$file_stations[1] ), header=T)
 # Creation du data file pour 2013 :
-
-# Donnees Trips
-trips <- read.csv("data/Divvy_Stations_Trips_2013/Divvy_Trips_2013.csv", header=T)
+trips <- read.csv(toString(config$file_trips[1]), header=T)
 
 names(trips)
 head(trips)
