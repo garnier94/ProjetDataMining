@@ -38,7 +38,7 @@ library("graphics")
 # II- Importation des donnees
 ################################################################
 
-
+setwd("~/statML/Projet/ProjetDataMining")
 config = read.csv("config.csv")
 
 setwd(toString(  config$loc_dir ))
@@ -114,20 +114,47 @@ rm(Data1)
 
 Data2 <- mutate(trips, Hour = hour(trips$starttime), Day= format(starttime, "%Y-%m-%d" ))
 Data2$Day <- as.POSIXct(strptime(Data2$Day,"%Y-%m-%d"))
+Data2$Day <-as.Date(Data2$Day)
 
 TrajetStationSortant <- summarise(group_by(Data2, Day, from_station_id),nb=n())
 TrajetStationEntrant <- summarise(group_by(Data2, Day, to_station_id),nb=n())
 
-#On s'intéresse à la station Wood St And Milwaukee Ave:
+NbStations = 351
+listeDate = seq(as.Date("2013-06-27"), as.Date("2013-12-31"),"day")
+summary(TrajetStationEntrant )
 
-station = 97
+TrajetStationEntrant <- complete(TrajetStationEntrant,Day = listeDate,to_station_id, fill = list(nb = 0))
+TrajetStationSortant <- complete(TrajetStationSortant,Day = listeDate, from_station_id = 5:NbStations ,fill = list(nb = 0))
 
-Index = which(TrajetStationEntrant$to_station_id == station)
-InWoodStAndMilwaukeeAve = TrajetStationEntrant[Index,]
-rm(Index)
-Index = which(TrajetStationSortant$from_station_id == station)
-OutWoodStAndMilwaukeeAve= TrajetStationSortant[Index,]
+ListStatTest= sample(TrajetStationEntrant$to_station_id, 10)
 
-plot( InWoodStAndMilwaukeeAve$Day,InWoodStAndMilwaukeeAve$nb, col = "blue", xlab = "Date" , ylim = c(0,200), type ="l")
-par(new = TRUE)
-plot(OutWoodStAndMilwaukeeAve$Day, OutWoodStAndMilwaukeeAve$nb, col ="red", xlab = "Date",ylim = c(0,200), type = "l")
+plot(par=FALSE)
+for(station in ListStatTest)
+{
+  Index = which(TrajetStationEntrant$to_station_id == station & TrajetStationEntrant$Day < "2013-10-30" & TrajetStationEntrant$Day > "2013-09-30")
+  InStations = TrajetStationEntrant[Index,]
+  rm(Index)
+  Index = which(TrajetStationSortant$from_station_id == station& TrajetStationSortant$Day < "2013-10-30"& TrajetStationEntrant$Day > "2013-09-30")
+  OutStations= TrajetStationSortant[Index,]
+  AvNov = OutStations$Day
+  plot( AvNov, cumsum(InStations$nb-OutStations$nb), xlab = "Date",ylim = c(-400,400), type = "l")
+  par(new=TRUE)
+}
+
+#Groupement par Station et par heure : 
+#Analyse statistique : trouver des stations représentatives
+#Profil de stations : 
+
+Data3 <- mutate(trips, Hour = hour(trips$starttime), Day= format(starttime, "%Y-%m-%d" ))
+Data3$Day <- as.POSIXct(strptime(Data3$Day,"%Y-%m-%d"))
+Data3$Day <-as.Date(Data3$Day)
+TrajetStationSortant <- summarise(group_by(Data3, Day, from_station_id),nb=n())
+NbTrajetStationsE =summarise(group_by(TrajetStationSortant,from_station_id), Trajet=sum(nb))
+TrajetStationEntrant <- summarise(group_by(Data3, Day, to_station_id),nb=n())
+NbTrajetStationsA =summarise(group_by(TrajetStationEntrant,to_station_id), Trajet=sum(nb))
+
+plot(NbTrajetStationsE,ylim=c(0,20000),xlab="Stations", col='red', pch =18)
+par(new=TRUE)
+plot(NbTrajetStationsA,ylim=c(0,20000),xlab="Stations", pch= 18 )
+
+
