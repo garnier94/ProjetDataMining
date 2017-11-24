@@ -2,7 +2,7 @@
 #########################  DATA MINING  ########################
 ################################################################
 
-pdf("~/Documents/Orsay/M2/Data Mining/Divvy_Stations_Trips_2013/projet.pdf") 
+pdf("~/Documents/Orsay/M2/Data Mining/Divvy_Stations_Trips_2013/projet.pdf")
 
 # Lien vers les donnees : https://www.divvybikes.com/system-data
 
@@ -11,7 +11,7 @@ pdf("~/Documents/Orsay/M2/Data Mining/Divvy_Stations_Trips_2013/projet.pdf")
 
 # Ajouter les donnees meteo, ajouter le type de jours
 
-# Etapes : 
+# Etapes :
 #     1) Se concentrer sur les donnees des trajets de 2013
 #        - rajouter la variable a predire
 #        - graphiques
@@ -68,7 +68,7 @@ rm(Date)
 #glimpse(trips)
 summary(trips)
 
-# Pour predire le nombre de velos par station par heures, je dois : 
+# Pour predire le nombre de velos par station par heures, je dois :
 #         1) faire une agregation par station et une agregation par heure
 #         2) faire la somme des lignes et rajouter cette info dans une colonne des donnees
 #         3) diviser mon echantillon en deux parties pour commencer le travail de prediction
@@ -93,7 +93,7 @@ plot(TrajetJuillet$DayHour, TrajetJuillet$nb, xlab = "Jour", ylab = "Nombre de t
 
 #Essayons maintenant pour la demi heure:
 
-step = 15 
+step = 15
 Data1 <- mutate(trips , TimePeriod = paste(format(starttime, "%Y-%m-%d %H"), step*minute(starttime)%/%step))
 Data1$TimePeriod <- as.POSIXct(strptime(Data1$TimePeriod,"%Y-%m-%d %H %M"))
 
@@ -105,12 +105,14 @@ Trajet <- TrajetPerStep[Index,]
 rm(Index)
 
 plot(Trajet$TimePeriod,Trajet$nb, xlab = "Jour", ylab = "Nombre de trajets par 1/4 heure",type = "l" )
-# On observe que le dimanche et le lundi semble se comporter de la même façon . Or le 2 septembre 2013 est un jour férie aux USA!  
+# On observe que le dimanche et le lundi semble se comporter de la même façon . Or le 2 septembre 2013 est un jour férie aux USA!
 
 rm(Data1)
 
 # V- Agregation par station : Quelques Tests
 ############################################
+
+
 
 Data2 <- mutate(trips, Hour = hour(trips$starttime), Day= format(starttime, "%Y-%m-%d" ))
 Data2$Day <- as.POSIXct(strptime(Data2$Day,"%Y-%m-%d"))
@@ -123,27 +125,29 @@ NbStations = 351
 listeDate = seq(as.Date("2013-06-27"), as.Date("2013-12-31"),"day")
 summary(TrajetStationEntrant )
 
-TrajetStationEntrant <- complete(TrajetStationEntrant,Day = listeDate,to_station_id, fill = list(nb = 0))
-TrajetStationSortant <- complete(TrajetStationSortant,Day = listeDate, from_station_id = 5:NbStations ,fill = list(nb = 0))
+#Ca ne marche pas pour l'instant:
 
-ListStatTest= sample(TrajetStationEntrant$to_station_id, 10)
+# TrajetStationEntrant <- complete(TrajetStationEntrant,Day = listeDate,to_station_id, fill = list(nb = 0))
+# TrajetStationSortant <- complete(TrajetStationSortant,Day = listeDate, from_station_id = 5:NbStations ,fill = list(nb = 0))
+#
+# ListStatTest= sample(TrajetStationEntrant$to_station_id, 10)
+#
+# plot(par=FALSE)
+# for(station in ListStatTest)
+# {
+#   Index = which(TrajetStationEntrant$to_station_id == station & TrajetStationEntrant$Day < "2013-10-30" & TrajetStationEntrant$Day > "2013-09-30")
+#   InStations = TrajetStationEntrant[Index,]
+#   rm(Index)
+#   Index = which(TrajetStationSortant$from_station_id == station& TrajetStationSortant$Day < "2013-10-30"& TrajetStationEntrant$Day > "2013-09-30")
+#   OutStations= TrajetStationSortant[Index,]
+#   AvNov = OutStations$Day
+#   plot( AvNov, cumsum(InStations$nb-OutStations$nb), xlab = "Date",ylim = c(-400,400), type = "l")
+#   par(new=TRUE)
+# }
 
-plot(par=FALSE)
-for(station in ListStatTest)
-{
-  Index = which(TrajetStationEntrant$to_station_id == station & TrajetStationEntrant$Day < "2013-10-30" & TrajetStationEntrant$Day > "2013-09-30")
-  InStations = TrajetStationEntrant[Index,]
-  rm(Index)
-  Index = which(TrajetStationSortant$from_station_id == station& TrajetStationSortant$Day < "2013-10-30"& TrajetStationEntrant$Day > "2013-09-30")
-  OutStations= TrajetStationSortant[Index,]
-  AvNov = OutStations$Day
-  plot( AvNov, cumsum(InStations$nb-OutStations$nb), xlab = "Date",ylim = c(-400,400), type = "l")
-  par(new=TRUE)
-}
-
-#Groupement par Station et par heure : 
+#Groupement par Station et par heure :
 #Analyse statistique : trouver des stations représentatives
-#Profil de stations : 
+#Profil de stations :
 
 Data3 <- mutate(trips, Hour = hour(trips$starttime), Day= format(starttime, "%Y-%m-%d" ))
 Data3$Day <- as.POSIXct(strptime(Data3$Day,"%Y-%m-%d"))
@@ -156,5 +160,17 @@ NbTrajetStationsA =summarise(group_by(TrajetStationEntrant,to_station_id), Traje
 plot(NbTrajetStationsE,ylim=c(0,20000),xlab="Stations", col='red', pch =18)
 par(new=TRUE)
 plot(NbTrajetStationsA,ylim=c(0,20000),xlab="Stations", pch= 18 )
+
+# VI Aggregation
+#==============================
+
+Data4 <- mutate(trips, Hour = hour(trips$starttime), Day= format(starttime, "%Y-%m-%d" ))
+Data4$Day <- as.POSIXct(strptime(Data4$Day,"%Y-%m-%d"))
+Data4$Day <-as.Date(Data4$Day)
+
+TrajetStationEntrant <- summarise(group_by(Data4, Day, Hour,station = to_station_id),nbE=n())
+TrajetStationSortant <- summarise(group_by(Data4, Day, Hour,station = from_station_id),nbS=n())
+
+Data2013perHour <- full_join(TrajetStationEntrant, TrajetStationSortant, by = c("Day","station","Hour" ))
 
 
