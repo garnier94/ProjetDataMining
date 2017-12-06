@@ -2,8 +2,6 @@
 #########################  DATA MINING  ########################
 ################################################################
 
-pdf("~/Documents/Orsay/M2/Data Mining/Divvy_Stations_Trips_2013/projet.pdf")
-
 # Lien vers les donnees : https://www.divvybikes.com/system-data
 
 # Donnees sur les utilisations des velos en libre service dans la ville de Chicago
@@ -26,23 +24,21 @@ pdf("~/Documents/Orsay/M2/Data Mining/Divvy_Stations_Trips_2013/projet.pdf")
 rm(list=objects())
 graphics.off()
 
-# Set Working Directory
-#setwd("~/Documents/Orsay/M2/Data Mining/Divvy_Stations_Trips_2013")
-
 # Chargement des packages
 library("tidyverse")
 library("magrittr")
 library("lubridate")
 library("graphics")
+library("timeDate")
 
 
 # II- Importation des donnees
 ################################################################
 
-setwd("~/statML/Projet/ProjetDataMining")
 config = read.csv("config.csv")
 
 setwd(toString(  config$loc_dir ))
+
 # Donnees Stations
 stations <- read.csv(toString(config$file_stations[1] ), header=T)
 # Creation du data file pour 2013 :
@@ -66,7 +62,7 @@ Date <- as.POSIXct(strptime(trips$stoptime,"%Y-%m-%d %H:%M"))
 trips$stoptime <- Date
 rm(Date)
 
-#glimpse(trips)
+glimpse(trips)
 summary(trips)
 
 # Pour predire le nombre de velos par station par heures, je dois :
@@ -74,7 +70,7 @@ summary(trips)
 #         2) faire la somme des lignes et rajouter cette info dans une colonne des donnees
 #         3) diviser mon echantillon en deux parties pour commencer le travail de prediction
 
-# IV- Agregation par heure : Quelques Tests
+# IV- Agregation par heure :
 ################################################################
 
 #On le fait d'abord pour le mois de Juillet 2013 :
@@ -110,10 +106,8 @@ plot(Trajet$TimePeriod,Trajet$nb, xlab = "Jour", ylab = "Nombre de trajets par 1
 
 rm(Data1)
 
-# V- Agregation par station : Quelques Tests
+# V- Agregation par station :
 ############################################
-
-
 
 Data2 <- mutate(trips, Hour = hour(trips$starttime), Day= format(starttime, "%Y-%m-%d" ))
 Data2$Day <- as.POSIXct(strptime(Data2$Day,"%Y-%m-%d"))
@@ -126,26 +120,6 @@ NbStations = 351
 listeDate = seq(as.Date("2013-06-27"), as.Date("2013-12-31"),"day")
 summary(TrajetStationEntrant )
 
-#Ca ne marche pas pour l'instant:
-
-# TrajetStationEntrant <- complete(TrajetStationEntrant,Day = listeDate,to_station_id, fill = list(nb = 0))
-# TrajetStationSortant <- complete(TrajetStationSortant,Day = listeDate, from_station_id = 5:NbStations ,fill = list(nb = 0))
-#
-# ListStatTest= sample(TrajetStationEntrant$to_station_id, 10)
-#
-# plot(par=FALSE)
-# for(station in ListStatTest)
-# {
-#   Index = which(TrajetStationEntrant$to_station_id == station & TrajetStationEntrant$Day < "2013-10-30" & TrajetStationEntrant$Day > "2013-09-30")
-#   InStations = TrajetStationEntrant[Index,]
-#   rm(Index)
-#   Index = which(TrajetStationSortant$from_station_id == station& TrajetStationSortant$Day < "2013-10-30"& TrajetStationEntrant$Day > "2013-09-30")
-#   OutStations= TrajetStationSortant[Index,]
-#   AvNov = OutStations$Day
-#   plot( AvNov, cumsum(InStations$nb-OutStations$nb), xlab = "Date",ylim = c(-400,400), type = "l")
-#   par(new=TRUE)
-# }
-
 #Groupement par Station et par heure :
 #Analyse statistique : trouver des stations représentatives
 #Profil de stations :
@@ -154,9 +128,9 @@ Data3 <- mutate(trips, Hour = hour(trips$starttime), Day= format(starttime, "%Y-
 Data3$Day <- as.POSIXct(strptime(Data3$Day,"%Y-%m-%d"))
 Data3$Day <-as.Date(Data3$Day)
 TrajetStationSortant <- summarise(group_by(Data3, Day, from_station_id),nb=n())
-NbTrajetStationsE =summarise(group_by(TrajetStationSortant,from_station_id), Trajet=sum(nb))
+NbTrajetStationsE = summarise(group_by(TrajetStationSortant,from_station_id), Trajet=sum(nb))
 TrajetStationEntrant <- summarise(group_by(Data3, Day, to_station_id),nb=n())
-NbTrajetStationsA =summarise(group_by(TrajetStationEntrant,to_station_id), Trajet=sum(nb))
+NbTrajetStationsA = summarise(group_by(TrajetStationEntrant,to_station_id), Trajet=sum(nb))
 
 plot(NbTrajetStationsE,ylim=c(0,20000),xlab="Stations", col='red', pch =18)
 par(new=TRUE)
@@ -173,5 +147,8 @@ TrajetStationEntrant <- summarise(group_by(Data4, Day, Hour,station = to_station
 TrajetStationSortant <- summarise(group_by(Data4, Day, Hour,station = from_station_id),nbS=n())
 
 Data2013perHour <- full_join(TrajetStationEntrant, TrajetStationSortant, by = c("Day","station","Hour" ))
-save(Data2013perHour,file = "AggratedData2013.RData")
+Data2013perHour[is.na(Data2013perHour)] <- 0
 
+
+save(Data2013perHour,file = "AggratedData2013.RData")
+                     
