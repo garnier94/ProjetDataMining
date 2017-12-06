@@ -1,4 +1,6 @@
 load("~/statML/Projet/ProjetDataMining/AggratedData2013.RData")
+setwd("~/statML/Projet/ProjetDataMining")
+
 
 ## Une fonction de normalisation de l'heure
 

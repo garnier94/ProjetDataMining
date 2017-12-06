@@ -27,7 +27,8 @@ rm(list=objects())
 graphics.off()
 
 # Set Working Directory
-setwd("~/Documents/Orsay/M2/Data Mining/Divvy_Stations_Trips_2013")
+#setwd("~/Documents/Orsay/M2/Data Mining/Divvy_Stations_Trips_2013")
+setwd("~/statML/Projet/ProjetDataMining")
 
 # Chargement des packages
 library("tidyverse")
@@ -38,14 +39,14 @@ library("xts")
 ################################################################
 
 # Donnees Stations
- stations <- read.csv("Divvy_Stations_2013.csv", header=T)
+ stations <- read.csv("data/Divvy_Stations_Trips_2013/Divvy_Stations_2013.csv", header=T)
 # n_stat = length(stations[,1])
 # Pour le moment je me limite aux donnees sur les trajets
 
 # Creation du data file pour 2013 :
 
 # Donnees Trips
-trips <- read.csv("Divvy_Trips_2013.csv", header=T)
+trips <- read.csv("data/Divvy_Stations_Trips_2013/Divvy_Trips_2013.csv", header=T)
 
 names(trips)
 head(trips)
@@ -65,7 +66,7 @@ Date <- as.POSIXct(strptime(trips$stoptime,"%Y-%m-%d %H:%M"))
 trips$stoptime <- Date
 rm(Date)
 
-glimpse(trips)
+#glimpse(trips)
 summary(trips)
 
 # Pour predire le nombre de velos par station par heures, je dois : 
@@ -73,15 +74,25 @@ summary(trips)
 #         2) faire la somme des lignes et rajouter cette info dans une colonne des donnees
 #         3) diviser mon echantillon en deux parties pour commencer le travail de prediction
 
-# IV- Agregation par station et par heure
+# IV- Agregation par heure
 ################################################################
 
-station.xts<-xts(trips$from_station_id, order.by = trips$starttime)
-hour <- as.factor(.indexhour(station.xts))
+#On le fait d'abord pour le mois de Juillet 2013 :
 
-DayType <- weekdays(trips$starttime,abbreviate = F)%>%as.factor()
-trips$DayType <- DayType
-trips <- createIndicators(trips, "DayType",prefix='DT')
+Data0 <- mutate(trips, DayHour = format(starttime, "%Y-%m-%d %H"))
+DateHeure <- as.POSIXct(strptime(Data0$DayHour,"%Y-%m-%d %H"))
+Data0$DayHour <- DateHeure
+rm(DateHeure)
 
+by_hour <-group_by(Data0, DayHour)
+TrajetPerHour <- summarise(by_hour,nb= n())
 
-dev.off() 
+IndexJuillet <- which(TrajetPerHour$DayHour>="2013-07-01 00:00:00" & TrajetPerHour$DayHour <="2013-07-30 00:00:00" )
+TrajetJuillet <- TrajetPerHour[IndexJuillet,]
+
+plot(TrajetJuillet$DayHour, TrajetJuillet$nb, xlab = "Jour", ylab = "Nombre de trajets par heure",type = "l" )
+
+#Essayons maintenant pour la demi heure:
+
+Data1 <- mutate(trips, DayHour = format(starttime, "%Y-%m-%d %H"))
+

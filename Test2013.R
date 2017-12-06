@@ -35,6 +35,7 @@ library("magrittr")
 library("lubridate")
 library("graphics")
 
+
 # II- Importation des donnees
 ################################################################
 
@@ -172,5 +173,5 @@ TrajetStationEntrant <- summarise(group_by(Data4, Day, Hour,station = to_station
 TrajetStationSortant <- summarise(group_by(Data4, Day, Hour,station = from_station_id),nbS=n())
 
 Data2013perHour <- full_join(TrajetStationEntrant, TrajetStationSortant, by = c("Day","station","Hour" ))
-
+save(Data2013perHour,file = "AggratedData2013.RData")
 
