@@ -31,6 +31,7 @@ library("lubridate")
 library("graphics")
 library("timeDate")
 
+
 # II- Importation des donnees
 ################################################################
 
@@ -146,14 +147,9 @@ TrajetStationEntrant <- summarise(group_by(Data4, Day, Hour,station = to_station
 TrajetStationSortant <- summarise(group_by(Data4, Day, Hour,station = from_station_id),nbS=n())
 
 Data2013perHour <- full_join(TrajetStationEntrant, TrajetStationSortant, by = c("Day","station","Hour" ))
-
 Data2013perHour[is.na(Data2013perHour)] <- 0
 
 save(Data2013perHour, file="AggratedData2013.RData")
 
-# Rajouts de variables explicatives : 
-
-# 1) météo
-# 2) type jours (speciaux et dow)
-
+save(Data2013perHour,file = "AggratedData2013.RData")
                      
