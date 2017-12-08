@@ -1,0 +1,13 @@
+---
+title: "Idées"
+author: "Projet ML"
+date: "08/12/2017"
+output: pdf_document
+---
+
+- regroupement par zone de population équivalente (FedStats) = variables en plus (socio, démo)
+- minimiser erreur quadratique entre le nombre de vélos entrants, sortants d'une zone
+- erreur relative selon les zones pour voir l'influence de la taille des stations
+- visualisation temporelle (dynamique) pour voir les changements entre l'activité des zones pour 
+la journée en semaine, le soir, le samedi et le dimanche (pourquoi pas les jours fériés)
+- si changement de capacité au niveau des zones : prétraitement pour en tenir compte (on ne peut pas prévoir le changement de capacité)
