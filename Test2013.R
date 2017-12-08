@@ -149,6 +149,7 @@ Data2013perHour <- full_join(TrajetStationEntrant, TrajetStationSortant, by = c(
 
 Data2013perHour[is.na(Data2013perHour)] <- 0
 
+save(Data2013perHour, file="AggratedData2013.RData")
 
 # Rajouts de variables explicatives : 
 
