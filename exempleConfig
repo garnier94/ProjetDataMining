@@ -1,2 +1,0 @@
-id,loc_dir,file_stations,file_trips
-1,~/statML/Projet/ProjetDataMining,data/Divvy_Stations_Trips_2013/Divvy_Stations_2013.csv,data/Divvy_Stations_Trips_2013/Divvy_Trips_2013.csv
