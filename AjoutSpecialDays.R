@@ -1,5 +1,14 @@
-load("~/Documents/Orsay/M2/Data Mining/ProjetDataMining/AggratedData2013.RData")
-Data2013perHour[is.na(Data2013perHour)] <- 0
+
+rm(list=objects())
+graphics.off()
+
+
+setwd("~/StatML/DataProjet/AggregatedData")
+load("AggratedData2014_WithM.RData")
+load("AggratedData2015_WithM.RData")
+load("AggratedData2016_WithM.RData")
+load("AggratedData2017_WithM.RData")
+
 
 # data_frame avec les jours fériés en 2013
 # same special days with the function holidayNYSE in the package timeDate
@@ -35,17 +44,19 @@ special_days <- data.frame(type_days,special_2013,special_2014,special_2015,spec
 
 # day of the week : 
 
-Data2013perHour$dow = as.numeric(format(Data2013perHour$Day, format = "%u"))
-Data2013perHour$weekday = format(Data2013perHour$Day, format = "%a")
+Data <- Data2015
+special <- special_days$special_2015
 
-for(i in 1:length(special_2013)){
-  positions <- which(Data2013perHour$Day == special_days$special_2013[i])
-  Data2013perHour$dow[positions] = 8
-  Data2013perHour$weekday[positions] = as.character(special_days$type_days[i])
+Data$dow = as.numeric(format(Data$Day, format = "%u"))
+Data$weekday = format(Data$Day, format = "%a")
+
+for(i in 1:length(special)){
+  positions <- which(Data$Day == special[i])
+  Data$dow[positions] = 8
+  Data$weekday[positions] = as.character(special_days$type_days[i])
 }
 
-# examples
-head(Data2013perHour[which(Data2013perHour$Day == special_days$special_2013[10]),],5)
-head(Data2013perHour[which(Data2013perHour$Day == special_days$special_2013[7]),],5)
 
-save(Data2013perHour, file="Aggregate_data_special_days.RData")
+Data2015 <-Data
+
+save(Data2015, file="Full_data2015.RData")

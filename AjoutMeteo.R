@@ -1,6 +1,13 @@
-load("~/statML/Projet/ProjetDataMining/AggratedData2013.RData")
-setwd("~/statML/Projet/ProjetDataMining")
 
+rm(list=objects())
+graphics.off()
+
+
+setwd("~/StatML/DataProjet/AggregatedData")
+load("AggratedData2015.RData")
+
+
+Data <- Data2015
 
 ## Une fonction de normalisation de l'heure
 
@@ -8,7 +15,7 @@ ConvertHour <- function(time_stamp)
 {
   if( minute(time_stamp) >30)
   {
-    return( hour(time_stamp) + 1)
+    return(( hour(time_stamp) + 1) %% 24)
   }
   return( hour(time_stamp))
 }
@@ -20,26 +27,34 @@ library(lubridate)
 library(tidyverse)
 library(weathermetrics)
 
-minDate <- min(Data2013perHour$Day)
-maxDate <- max(Data2013perHour$Day)
+minDate <- min(Data$Day)-2
+maxDate <- max(Data$Day)+2
 
 Meteo <- riem_measures(station = "MDW", date_start = as.character(minDate), date_end = as.character(maxDate))
 Meteo$tmpf <- fahrenheit.to.celsius(Meteo$tmpf)
 Meteo$Day <- date(Meteo$valid)
 Meteo$Month <- month(Meteo$valid)
+Meteo$Year <- year(Meteo$valid)
 
 HeureNorm <- sapply(Meteo$valid,ConvertHour)
 Meteo$Hour <- as.array(HeureNorm)
 
-sumMeteo <- summarise(group_by(Meteo, Day, Hour),temp = mean(tmpf), pluvio = mean(p01i))
-DatawithMeteo <- left_join(Data2013perHour,sumMeteo, by= c("Hour" ="Hour", "Day" ="Day"))
+sumMeteo <- summarise(group_by(Meteo, Day, Hour),temp = mean(tmpf, na.rm = TRUE), pluvio = mean(p01i, na.rm = TRUE))
+DatawithMeteo <- left_join(Data,sumMeteo, by= c("Hour" ="Hour", "Day" ="Day"))
 
 
 ### éliminer les NA
-
 DatawithMeteo$pluvio[is.na(DatawithMeteo$pluvio)] <-0 # On suppose qu'il n'y a pas de pluie
 
-MeanMonth <- summarise(group_by(Meteo,Month,Hour),temp = mean(tmpf))
-save(DatawithMeteo,file = "AggratedData2013.RData")
+MeanMonth <- summarise(group_by(Meteo,Year, Month,Hour),mean_temp = mean(tmpf, na.rm = TRUE))
+DatawithMeteo$Month <- month(DatawithMeteo$Day)
+DatawithMeteo$Year <- month(DatawithMeteo$Day)
+DatawithMeteo <- left_join(DatawithMeteo,MeanMonth, by= c("Year"="Year","Hour" ="Hour", "Month" ="Month"))
+DatawithMeteo$temp[is.na(DatawithMeteo$temp)] <- DatawithMeteo$mean_temp[is.na(DatawithMeteo$temp)]
+
+
+Data2015 <- DatawithMeteo[,- (8:10)]
+
+save(Data2015,file = "AggratedData2015_WithM.RData")
 
 
