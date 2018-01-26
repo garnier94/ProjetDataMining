@@ -4,13 +4,14 @@ library(raster)
 library(tidyverse)
 
 #--------------------
-Stations2017 <- read.csv("~/StatML/DataProjet/Divvy_Stations_2015.csv")
+Stations2017 <- read.csv("~/StatML/DataProjet/Divvy_Stations_2017_Q1Q2.csv")
+Stations2017.map <- Stations2017
 station_map <- readOGR(path.expand("~/StatML/DataProjet/Divvy_Stations_Trips_2014_Q3Q4/Divvy_Stations_2014_Q3Q4"),"Divvy_Stations_2015")
 
 
 ecart = 0.09
 
-minLat = min(Stations2017$latitude)-ecart
+minLat = min(Stations2017$latitude)-ecart-0.25
 maxLat = max(Stations2017$latitude)+ecart
 minLon = min(Stations2017$longitude)-ecart
 maxLon = max(Stations2017$longitude )+ecart
@@ -40,4 +41,20 @@ plot(ChicagoR, axes= F, xlab ="", ylab="", add= T)
 axis(2, ylim=c(minLat, maxLat))
 axis(1, xlim=c(minLon, maxLon))
 plot(station_map, col='red')
+
+### Stations :
+coordinates(Stations2017.map) <- ~ longitude + latitude
+proj4string(Stations2017.map) <- proj4string(ChicagoR)
+Stations2017$district <-over(Stations2017.map, ChicagoR)$SLDLST
+
+District13 <- Stations2017[which(is.na(Stations2017$district)),]
+
+coordinates(District13)<- ~ longitude + latitude
+
+
+plot(ChicagoR, axes= F, xlab ="", ylab="")
+axis(2, ylim=c(minLat, maxLat))
+axis(1, xlim=c(minLon, maxLon))
+plot(Stations2017.map, col='red', add= T)
+plot(District13, add= T, col ="blue")
 
