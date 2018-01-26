@@ -56,38 +56,47 @@ Trips2017<- rbind(Trips2017_1,Trips2017_2)
 rm(Trips2017_1,Trips2017_2)
 
 #Ici on choisit l'année qu'on va transformer
-trips <- Trips2017
+trips <- Trips2015
 
 # III- Conversion en type "Date" de starttime et de stoptime
 ################################################################
 
-#Date <- as.POSIXct(strptime(trips$starttime,"%m/%d/%Y %H:%M"))
+Date <- as.POSIXct(strptime(trips$starttime,"%m/%d/%Y %H:%M"))
 # Change the prevbious line by this if year = 2017
-Date <- as.POSIXct(strptime(trips$start_time,"%m/%d/%Y %H:%M"))
+#Date <- as.POSIXct(strptime(trips$start_time,"%m/%d/%Y %H:%M"))
 trips$starttime <- Date
 rm(Date)
 
-#Date <- as.POSIXct(strptime(trips$stoptime,"%m/%d/%Y %H:%M"))
+Date <- as.POSIXct(strptime(trips$stoptime,"%m/%d/%Y %H:%M"))
 # Change the prevbious line by this if year = 2017
-Date <- as.POSIXct(strptime(trips$end_time,"%m/%d/%Y %H:%M"))
+#Date <- as.POSIXct(strptime(trips$end_time,"%m/%d/%Y %H:%M"))
 trips$stoptime <- Date
 rm(Date)
 
 # VI Aggregation
 #==============================
 
+
+minDate = floor_date(min(trips$starttime), unit= "hour")
+maxDate = floor_date(max(trips$stoptime), unit="hour")
+
+listDate = seq(minDate, maxDate, by = "hour")
+
+
 Data <- mutate(trips, Hour = hour(trips$starttime), Day= format(starttime, "%Y-%m-%d" ))
 Data$Day <- as.POSIXct(strptime(Data$Day,"%Y-%m-%d"))
-Data$Day <-as.Date(Data$Day)
+
 
 Data2 <- mutate(trips, Hour = hour(trips$stoptime), Day= format(stoptime, "%Y-%m-%d" ))
-Data2$Day2 <- as.POSIXct(strptime(Data2$Day,"%Y-%m-%d"))
-Data2$Day <-as.Date(Data2$Day)
+Data2$Day <- as.POSIXct(strptime(Data2$Day,"%Y-%m-%d"))
 
 TrajetStationEntrant <- summarise(group_by(Data2, Day, Hour,station = to_station_id),nbE=n())
 TrajetStationSortant <- summarise(group_by(Data, Day, Hour,station = from_station_id),nbS=n())
 
 Datat <- full_join(TrajetStationEntrant, TrajetStationSortant, by = c("Day","station","Hour" ))
+
+
+
 Datat[is.na(Datat)] <- 0
 Datat$nbE[which(is.na(Datat$nbE))] <- 0
 Datat$nbS[which(is.na(Datat$nbS))] <- 0
