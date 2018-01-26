@@ -44,8 +44,8 @@ special_days <- data.frame(type_days,special_2013,special_2014,special_2015,spec
 
 # day of the week : 
 
-Data <- Data2015
-special <- special_days$special_2015
+Data <- Data2017
+special <- special_days$special_2017
 
 Data$dow = as.numeric(format(Data$Day, format = "%u"))
 Data$weekday = format(Data$Day, format = "%a")
@@ -57,6 +57,6 @@ for(i in 1:length(special)){
 }
 
 
-Data2015 <-Data
+Data2017 <-Data
 
-save(Data2015, file="Full_data2015.RData")
+save(Data2017, file="Full_data2017.RData")

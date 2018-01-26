@@ -1,13 +1,12 @@
-
 rm(list=objects())
 graphics.off()
 
 
 setwd("~/StatML/DataProjet/AggregatedData")
-load("AggratedData2015.RData")
+load("AggratedData2016.RData")
 
 
-Data <- Data2015
+Data <- Data2016
 
 ## Une fonction de normalisation de l'heure
 
@@ -53,8 +52,8 @@ DatawithMeteo <- left_join(DatawithMeteo,MeanMonth, by= c("Year"="Year","Hour" =
 DatawithMeteo$temp[is.na(DatawithMeteo$temp)] <- DatawithMeteo$mean_temp[is.na(DatawithMeteo$temp)]
 
 
-Data2015 <- DatawithMeteo[,- (8:10)]
+Data2016 <- DatawithMeteo[,- (8:10)]
 
-save(Data2015,file = "AggratedData2015_WithM.RData")
+save(Data2016,file = "AggratedData2016_WithM.RData")
 
 
