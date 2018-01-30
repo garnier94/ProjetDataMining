@@ -56,7 +56,7 @@ Trips2017<- rbind(Trips2017_1,Trips2017_2)
 rm(Trips2017_1,Trips2017_2)
 
 #Ici on choisit l'année qu'on va transformer
-trips <- Trips2015
+trips <- Trips2014
 
 # III- Conversion en type "Date" de starttime et de stoptime
 ################################################################
@@ -76,31 +76,34 @@ rm(Date)
 # VI Aggregation
 #==============================
 
-
 minDate = floor_date(min(trips$starttime), unit= "hour")
-maxDate = floor_date(max(trips$stoptime), unit="hour")
+year = year(minDate)
 
+# Trouvez une autre idée pour 2017
+maxDate = as.POSIXct(strptime( paste(year, "12-31 23:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
 listDate = seq(minDate, maxDate, by = "hour")
 
+Data <- mutate(trips, Hour = hour(trips$starttime), Time = floor_date(trips$starttime, unit = "hour"))
+Data2 <- mutate(trips, Hour = hour(trips$stoptime), Time = floor_date(trips$stoptime, unit = "hour"))
+Data2 <- Data2[which(year(Data2$Time)== year),] # On élimine les données supérieures à l'année considérée
 
-Data <- mutate(trips, Hour = hour(trips$starttime), Day= format(starttime, "%Y-%m-%d" ))
-Data$Day <- as.POSIXct(strptime(Data$Day,"%Y-%m-%d"))
+TrajetStationEntrant <- summarise(group_by(Data2, Time, Hour,station = to_station_id),nbE=n())
+TrajetStationSortant <- summarise(group_by(Data, Time, Hour,station = from_station_id),nbS=n())
 
+Data <- full_join(TrajetStationEntrant, TrajetStationSortant, by = c("Time","station","Hour" ))
+Data <- mutate(Data, Day = format(Time, "%Y-%m-%d" ))
 
-Data2 <- mutate(trips, Hour = hour(trips$stoptime), Day= format(stoptime, "%Y-%m-%d" ))
-Data2$Day <- as.POSIXct(strptime(Data2$Day,"%Y-%m-%d"))
+Data[is.na(Data)] <- 0
+Data$nbE[which(is.na(Data$nbE))] <- 0
+Data$nbS[which(is.na(Data$nbS))] <- 0
 
-TrajetStationEntrant <- summarise(group_by(Data2, Day, Hour,station = to_station_id),nbE=n())
-TrajetStationSortant <- summarise(group_by(Data, Day, Hour,station = from_station_id),nbS=n())
+# V Controle des valeurs manquantes: 
+#===================================
 
-Datat <- full_join(TrajetStationEntrant, TrajetStationSortant, by = c("Day","station","Hour" ))
+dftime = data.frame(Time = listDate)
+TimeValues = summarise(group_by(Data,Time), ind = 1)
+difftable =  left_join(dftime, TimeValues, by = "Time")
+MissingValues <- data.frame( Time = difftable$Time[which(is.na(difftable$ind))])
+MissingValues <- mutate(MissingValues, Day = format(Time, "%Y-%m-%d" ), Hour = hour(Time) )
 
-
-
-Datat[is.na(Datat)] <- 0
-Datat$nbE[which(is.na(Datat$nbE))] <- 0
-Datat$nbS[which(is.na(Datat$nbS))] <- 0
-
-Data2017 <- Datat
-
-save(Data2017, file="AggratedData2017.RData")
+save(Data, MissingValues, file=paste(  "AggratedData", year,".RData", sep = ""))

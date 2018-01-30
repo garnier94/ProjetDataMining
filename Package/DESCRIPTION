@@ -1,0 +1,9 @@
+Package: Package
+Title: Data Mining Project R package
+Version: 0.0
+Authors@R: person('Garnier', 'Rémy', email = 'garnier@crans.org', role = c('aut', 'cre'))
+Description: basis R functions for the Data Mining Project, M2 StatML
+Depends: R (>= 3.4.2)
+License: WFTPL
+Encoding: UTF-8
+LazyData: true

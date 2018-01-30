@@ -1,13 +1,10 @@
 rm(list=objects())
 graphics.off()
 
-
 setwd("~/StatML/DataProjet/AggregatedData")
-load("AggratedData2016.RData")
+load("AggratedData2014.RData")
 
-
-Data <- Data2016
-
+Data <- MissingValues
 ## Une fonction de normalisation de l'heure
 
 ConvertHour <- function(time_stamp)
@@ -26,8 +23,8 @@ library(lubridate)
 library(tidyverse)
 library(weathermetrics)
 
-minDate <- min(Data$Day)-2
-maxDate <- max(Data$Day)+2
+minDate <- min(Data$Day)
+maxDate <- max(Data$Day)
 
 Meteo <- riem_measures(station = "MDW", date_start = as.character(minDate), date_end = as.character(maxDate))
 Meteo$tmpf <- fahrenheit.to.celsius(Meteo$tmpf)
