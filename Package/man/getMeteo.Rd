@@ -4,10 +4,12 @@
 \alias{getMeteo}
 \title{getMeteo}
 \usage{
-getMeteo(year)
+getMeteo(year, save_data = TRUE)
 }
 \arguments{
 \item{year}{the year considerate}
+
+\item{save_data}{if TRUE the data are saved in a .RData format with the name "MeteoData<year>"}
 }
 \value{
 

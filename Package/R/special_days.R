@@ -1,0 +1,13 @@
+#' Table with special days in Chicago for the last five years : 2013-2015
+#'
+#' @format A data frame with 12 rows and 6 variables:
+#' \describe{
+#'   \item{type_days}{name of the special days}
+#'   \item{special_2013}{special days in 2013}
+#'   \item{special_2014}{special days in 2014}
+#'   \item{special_2015}{special days in 2015}
+#'   \item{special_2016}{special days in 2016}
+#'   \item{special_2017}{special days in 2017}
+#' }
+#' @source \url{MDA}
+"special_days"

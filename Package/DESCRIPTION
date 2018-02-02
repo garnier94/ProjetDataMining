@@ -6,6 +6,6 @@ Description: basis R functions for the Data Mining Project, M2 StatML
 Depends: R (>= 3.3.0)
 License: WFTPL
 Encoding: UTF-8
-LazyData: true
+LazyData: false
 RoxygenNote: 6.0.1
 Imports: lubridate, tidyverse, raster, riem, weathermetrics, rgdal

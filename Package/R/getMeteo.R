@@ -9,12 +9,6 @@
 #' @author Rémy Garnier & Camille Palmier
 #' @export
 
-
-#library(riem)
-#library(lubridate)
-#library(tidyverse)
-#library(weathermetrics)
-
 getMeteo <- function(year, save_data = TRUE){
 
   ## Gestion des dates
