@@ -4,11 +4,13 @@
 #'
 #' @param trips the raw data
 #' @param year the year of the raw predictions
+#' @param save_data if TRUE the data are saved in a .RData format with the name "AggregatedData<year>"
 #' @return
 #'
 #' @author Rémy Garnier & Camille Palmier
 #' @export
-aggregateData  <- function(trips, year )
+
+aggregateData  <- function(trips, year, save_data = TRUE )
 {
   if(year == 2017 )
     {
@@ -61,6 +63,11 @@ aggregateData  <- function(trips, year )
   difftable =  left_join(dftime, TimeValues, by = "Time")
   MissingValues <- data.frame( Time = difftable$Time[which(is.na(difftable$ind))])
   MissingValues <- mutate(MissingValues, Day = format(Time, "%Y-%m-%d" ), Hour = hour(Time) )
-  save(Data, MissingValues, file=paste(  "AggratedData", year,".RData", sep = ""))
+
+  if (save_data == TRUE) {
+    save(Data, MissingValues, file=paste(  "AggratedData", year,".RData", sep = ""))
+    }
+
+  return(Data)
 }
 

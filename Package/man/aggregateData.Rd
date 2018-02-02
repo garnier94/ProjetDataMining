@@ -4,12 +4,14 @@
 \alias{aggregateData}
 \title{aggregateData}
 \usage{
-aggregateData(trips, year)
+aggregateData(trips, year, save_data = TRUE)
 }
 \arguments{
 \item{trips}{the raw data}
 
-\item{year}{the predictions}
+\item{year}{the year of the raw predictions}
+
+\item{save_data}{if TRUE the data are saved in a .RData format with the name "AggregatedData<year>"}
 }
 \value{
 
