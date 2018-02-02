@@ -1,20 +1,7 @@
 rm(list=objects())
 graphics.off()
 
-setwd("~/StatML/DataProjet/AggregatedData")
-load("AggratedData2014.RData")
-
-Data <- MissingValues
-## Une fonction de normalisation de l'heure
-
-ConvertHour <- function(time_stamp)
-{
-  if( minute(time_stamp) >30)
-  {
-    return(( hour(time_stamp) + 1) %% 24)
-  }
-  return( hour(time_stamp))
-}
+## Ce fichier sert à créer une data.frame contenant les données météo d'une année à Chicago
 
 ## Ajout de la météo 
 
@@ -23,34 +10,36 @@ library(lubridate)
 library(tidyverse)
 library(weathermetrics)
 
-minDate <- min(Data$Day)
-maxDate <- max(Data$Day)
+## Gestion des dates
 
-Meteo <- riem_measures(station = "MDW", date_start = as.character(minDate), date_end = as.character(maxDate))
-Meteo$tmpf <- fahrenheit.to.celsius(Meteo$tmpf)
-Meteo$Day <- date(Meteo$valid)
-Meteo$Month <- month(Meteo$valid)
-Meteo$Year <- year(Meteo$valid)
+year = 2014 #L'année ou l'on veut prendre la météo
+minDate = as.POSIXct(strptime( paste(year, "01-01 00:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
+maxDate = as.POSIXct(strptime( paste(year+1, "01-01 01:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
+listDate = seq(minDate, maxDate, by = "hour")
+dftime = data.frame(Time = listDate)
 
-HeureNorm <- sapply(Meteo$valid,ConvertHour)
-Meteo$Hour <- as.array(HeureNorm)
+#Importation et selection des paramètre utiles pour la météo
 
-sumMeteo <- summarise(group_by(Meteo, Day, Hour),temp = mean(tmpf, na.rm = TRUE), pluvio = mean(p01i, na.rm = TRUE))
-DatawithMeteo <- left_join(Data,sumMeteo, by= c("Hour" ="Hour", "Day" ="Day"))
+Meteo <- riem_measures(station = "MDW", date_start = minDate, date_end = ceiling_date(maxDate , unit='day'))
+Meteo$Time <- round_date( Meteo$valid ,unit ='hour')
+Meteo$tmpf <- fahrenheit.to.celsius(Meteo$tmpf) # A enlever pour les américains
+MeteoData <- summarise(group_by(Meteo, Time),temp = mean(tmpf, na.rm = TRUE), pluvio = mean(p01i, na.rm = TRUE))
+
+#Jointure et traitement des données manquantes
+MeteoData <- left_join(dftime, MeteoData, by = ("Time"="Time"))
+
+MeteoData$pluvio[is.na(MeteoData$pluvio)] <-0 # Pas d'info = pas de pluie
+
+## Pour la température, on remplace les NA par la température moyenne sur le mois et l'heure considér
+MeteoData$Month <- month(MeteoData$Time)
+MeteoData$Hour <- hour(MeteoData$Time)
+MeanMonth <- summarise(group_by(MeteoData, Month, Hour), tempmean = mean(temp,na.rm = TRUE ) )
+
+MeteoData <- left_join(MeteoData,MeanMonth, by= c( "Hour" ="Hour", "Month" ="Month"))
+MeteoData$temp[is.na(MeteoData$temp)] <- MeteoData$tempmean[is.na(MeteoData$temp)]
 
 
-### éliminer les NA
-DatawithMeteo$pluvio[is.na(DatawithMeteo$pluvio)] <-0 # On suppose qu'il n'y a pas de pluie
-
-MeanMonth <- summarise(group_by(Meteo,Year, Month,Hour),mean_temp = mean(tmpf, na.rm = TRUE))
-DatawithMeteo$Month <- month(DatawithMeteo$Day)
-DatawithMeteo$Year <- month(DatawithMeteo$Day)
-DatawithMeteo <- left_join(DatawithMeteo,MeanMonth, by= c("Year"="Year","Hour" ="Hour", "Month" ="Month"))
-DatawithMeteo$temp[is.na(DatawithMeteo$temp)] <- DatawithMeteo$mean_temp[is.na(DatawithMeteo$temp)]
-
-
-Data2016 <- DatawithMeteo[,- (8:10)]
-
-save(Data2016,file = "AggratedData2016_WithM.RData")
+MeteoData <- MeteoData[,- (4:6)]
+#TODO Sauvegarde MeteoDato
 
 
