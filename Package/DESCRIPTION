@@ -1,4 +1,4 @@
-Package: Package
+Package: DivvyBikeProject
 Title: Data Mining Project R package
 Version: 0.0
 Authors@R: person('Garnier', 'Rémy', email = 'garnier@crans.org', role = c('aut', 'cre'))
@@ -7,3 +7,4 @@ Depends: R (>= 3.4.2)
 License: WFTPL
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 6.0.1
