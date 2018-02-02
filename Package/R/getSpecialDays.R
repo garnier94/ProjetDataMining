@@ -16,24 +16,33 @@ getSpecialDays <- function(year, save_data = TRUE){
   
   data("special_days")
 
-  # take the column of special_days corresponding to year
+  # first column with all the days of the year
   
-  Data <- special_days[,c(1, year-2011)]
+  minDate <- as.POSIXct(strptime( paste(year, "01-01 00:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
+  maxDate <- as.POSIXct(strptime( paste(year+1, "01-01 01:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
+  listDate <- seq(minDate, maxDate, by = "day")
+  Data <- data.frame(Day = listDate)
+  
+  # take the column of special_days corresponding to the year
+  
+  special <- special_days[,c(year-2011)]
   
   # day of the week : 
   
-  Data$dow = as.numeric(format(Data$Day, format = "%u"))
-  Data$weekday = format(Data$Day, format = "%a")
+  Data$dow <- as.numeric(format(Data$Day, format = "%u"))
+  Data$weekday <- format(Data$Day, format = "%a")
+  
+  # creation of the column 2 and 3
   
   for(i in 1:length(special)){
     positions <- which(Data$Day == special[i])
-    Data$dow[positions] = 8
-    Data$weekday[positions] = as.character(special_days$type_days[i])
+    Data$dow[positions] <- 8
+    Data$weekday[positions] <- as.character(special_days$type_days[i])
   }
   
+  if (save_data == TRUE){
+    save(Data, file=paste("SpecialDaysData", year,".RData", sep = ""))
+  }
   
-  Data2017 <-Data
-  
-  #save(Data2017, file="Full_data2017.RData")
-
+  return(Data)
 }
