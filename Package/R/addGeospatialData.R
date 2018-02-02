@@ -12,7 +12,7 @@
 #' @export
 #' 
 
-groupByGeospatialData <- fun(data, area, stations, save_data = TRUE)
+groupByGeospatialData <- function(data, area, stations, save_data = TRUE)
 {
   # Gestion des cartes
   coordinates(Stations.map) <- ~ longitude + latitude
