@@ -1,9 +1,9 @@
 Package: DivvyBikeProject
 Title: Data Mining Project R package
 Version: 0.0
-Authors@R: person('Garnier', 'Rémy', email = 'garnier@crans.org', role = c('aut', 'cre'))
+Authors@R: c(person('Garnier', 'Rémy', email = 'garnier@crans.org', role = c('aut', 'cre')),person('Palmier', 'Camille', email = 'camillepalmier@orange.fr', role = 'aut'))
 Description: basis R functions for the Data Mining Project, M2 StatML
-Depends: R (>= 3.4.2)
+Depends: R (>= 3.3.0)
 License: WFTPL
 Encoding: UTF-8
 LazyData: true

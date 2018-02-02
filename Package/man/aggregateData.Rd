@@ -18,5 +18,5 @@ aggregateData(trips, year)
 aggregate the raw Divvy_Bike_Data in a Data_Frame with aggregated parameter
 }
 \author{
-Rémy Garnier
+Rémy Garnier & Camille Palmier
 }
