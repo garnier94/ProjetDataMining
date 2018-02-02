@@ -1,6 +1,7 @@
 #' getMeteo
 #'
 #' get the meteological data of Chicago on a year
+#' warning : internet connection is required
 #'
 #' @param year the year considerate
 #' @param save_data if TRUE the data are saved in a .RData format with the name "MeteoData<year>"
@@ -47,5 +48,3 @@ getMeteo <- function(year, save_data = TRUE){
 
   return(MeteoData)
 }
-
-
