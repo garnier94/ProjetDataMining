@@ -13,27 +13,27 @@
 #' @export
 
 getSpecialDays <- function(year, save_data = TRUE){
+  
+  data("special_days")
 
-
-
-
-# day of the week : 
-
-Data <- Data2017
-special <- special_days$special_2017
-
-Data$dow = as.numeric(format(Data$Day, format = "%u"))
-Data$weekday = format(Data$Day, format = "%a")
-
-for(i in 1:length(special)){
-  positions <- which(Data$Day == special[i])
-  Data$dow[positions] = 8
-  Data$weekday[positions] = as.character(special_days$type_days[i])
-}
-
-
-Data2017 <-Data
-
-#save(Data2017, file="Full_data2017.RData")
+  # take the column of special_days corresponding to year
+  
+  Data <- special_days[,c(1, year-2011)]
+  
+  # day of the week : 
+  
+  Data$dow = as.numeric(format(Data$Day, format = "%u"))
+  Data$weekday = format(Data$Day, format = "%a")
+  
+  for(i in 1:length(special)){
+    positions <- which(Data$Day == special[i])
+    Data$dow[positions] = 8
+    Data$weekday[positions] = as.character(special_days$type_days[i])
+  }
+  
+  
+  Data2017 <-Data
+  
+  #save(Data2017, file="Full_data2017.RData")
 
 }

@@ -44,6 +44,8 @@ getMeteo <- function(year, save_data = TRUE){
   if (save_data == TRUE){
     save(MeteoData, file=paste("MeteoData", year,".RData", sep = ""))
   }
+
+  return(MeteoData)
 }
 
 

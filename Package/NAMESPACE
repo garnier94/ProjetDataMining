@@ -3,4 +3,5 @@
 export(aggregateData)
 export(getMeteo)
 export(getSpecialDays)
+export(groupByGeospatialData)
 export(rmse)
