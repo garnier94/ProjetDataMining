@@ -2,7 +2,7 @@
 #'
 #' Build the full data set 
 #'
-#' @param year the year considerate
+#' @param year the year 
 #' @param raw_data data coming from Aggregate Data 
 #' @param districts a Large SpatialPolygonDataFrame containing the different aera . The name of the column containing the area should be SLDLST
 #' @param Stations.map a data frame containing the position of the stations (latitude, longitude)
@@ -24,9 +24,11 @@
 #' @author Rémy Garnier & Camille Palmier
 #' @export
 
-BuildDataSet <- function(year, raw_data, districts, Stations.map , save_data = FALSE)
+BuildDataSet <- function(year, raw_data, districts, Stations, save_data = FALSE)
 {
-  Joined <- groupByGeospatialData(raw_data, districts, Stations.map)
+  Comp <- groupByGeospatialData(raw_data, districts, Stations, year, save_data = FALSE)
+  nb_stations_by_district <- Comp$nb
+  Joined <- Comp$Joined
   Meteo <- getMeteo(year, save_data = FALSE)
   ListDays <- getSpecialDays(year, save_data = FALSE)
   
@@ -39,12 +41,12 @@ BuildDataSet <- function(year, raw_data, districts, Stations.map , save_data = F
   
   expansion <- expand(Join, Time = listDate, district )
   Data <- left_join(expansion, Joined , by = c("district","Time"))
-  
+  Data <- left_join(Data, nb_stations_by_district, by = "district")
   Data$Day <-  format(Data$Time, "%Y-%m-%d" )
   Data$Hour <- hour(Data$Time)
   Data$nbE[which(is.na(Data$nbE))] <- 0
   Data$nbS[which(is.na(Data$nbS))] <- 0
-  Data$diff <- Data$nbE -Data$nbS
+  Data$diff <- (Data$nbE -Data$nbS)/Data$nb_stations
   ListDays$Day <- format( ListDays$Day, "%Y-%m-%d")
   Data <- left_join(Data, ListDays, by = "Day")
   Data <- left_join(Data, Meteo, by = "Time")
