@@ -8,17 +8,30 @@ library(weathermetrics)
 library(lubridate)
 
 #Importation des données géographiques 
-illinoisCR <- readOGR(path.expand("~/StatML/Projet/ProjetDataMining/Map/Congres"),"tl_2016_17_sldl")
-#illinoisCR <- readOGR(path.expand("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/Map/Congres"),"tl_2016_17_sldl")  
+
+# 2014
+# illinoisCR <- readOGR(path.expand("~/StatML/Projet/ProjetDataMining/Map/Congres"),"tl_2016_17_sldl")
+illinoisCR <- readOGR(path.expand("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/Map/Congres"),"tl_2016_17_sldl")  
 
 # Importation des stations
-Stations <-  read_csv("~/StatML/DataProjet/Divvy_Stations_Trips_2014_Q3Q4/Divvy_Stations_2014-Q3Q4.csv")
+
+# 2014
+# Stations <-  read_csv("~/StatML/DataProjet/Divvy_Stations_Trips_2014_Q3Q4/Divvy_Stations_2014-Q3Q4.csv")
+# Stations <-  read_csv("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/Données/Divvy_Stations_Trips_2014_Q3Q4/Divvy_Stations_2014-Q3Q4.csv")
+
+# 2015
+Stations <-  read_csv("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/Données/Divvy_Trips_2015-Q1Q2/Divvy_Stations_2015.csv")
 Stations.map <- Stations
 
-#Trips2014
-load("~/StatML/Projet/ProjetDataMining/Package/AggratedData2014.RData")
+# Trips2014
+# load("~/StatML/Projet/ProjetDataMining/Package/AggratedData2014.RData")
+# load("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/Package/AggratedData2014.RData")
 
-year = 2014
+# Trips2015
+load("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/Package/AggratedData2015.RData")
+
+
+year = 2015
 
 Joined <- groupByGeospatialData(Data, illinoisCR, Stations.map)
 Meteo <- getMeteo(year, save_data = FALSE)
