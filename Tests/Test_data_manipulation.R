@@ -67,52 +67,18 @@ rm(a, b, sel, o)
 
 # Graphique diff par district
 NumDistricts <- sort(as.matrix(distinct(data_all[,2])))
+
 col <- c('dark red', 'red', 'salmon', 'orange', 'magenta' ,'pink', 'yellow3', 'yellow', 'yellowgreen', 'green',
        'aquamarine1', 'azure', 'blue', 'royalblue', 'purple', 'dark blue', 'grey', 'dark green',
        'black','white')
-color_transparent <- adjustcolor(col, alpha.f = 0.5) 
 
-sel <- which(data_all$Time == NumDistricts[1])
+sel <- which(data_all$district == NumDistricts[1])
 o <- order(data_all$Time[sel])
 
-plot(data_all$Time[sel[o]], data_all$diff[sel[o]], col = color_transparent[1],
-      pch=16, cex=0.5, xlab='Date', ylab='Diff')
-text(DataPolls$Date2[s[1]],DataPolls[s[1],NomCandidat[1]], NomCandidat[1], col= col[1], font=2)
-
+plot(data_all$Time[sel[o]], data_all$diff[sel[o]], col=col[1],type='l', xlab='Date', ylab='Diff')
 
 for(i in c(2:length(NumDistricts))){
-sel <- which(data_all$Time == NumDistricts[i])
-o <- order(data_all$Time[sel])
-
-plot(data_all$Time, data_all[,2], ylim=range(DataPolls[, 2:(ncol(DataPolls)-1)]), 
-     col=color_transparent[1]
-     , pch=16, cex=0.5, xlab='Date', ylab='Polls')
-text(DataPolls$Date2[s[1]],DataPolls[s[1],NomCandidat[1]], NomCandidat[1], col= col[1], font=2)
-
+  sel <- which(data_all$district == NumDistricts[i])
+  print(NumDistricts[i])
+  lines(data_all$Time[sel[o]], data_all$diff[sel[o]], col=col[i], cex=0.5) 
 }
-
-
-
-
-
-
-#s<-seq(nrow(DataPolls)-5, 5, length.out = length(NomCandidat))%>%floor
-
-for(i in c(2:length(NomCandidat)))
-{
-  print(NomCandidat[i])
-  points(DataPolls$Date2, DataPolls[,NomCandidat[i]], col=color_transparent[i], pch=16, cex=0.5) 
-  text(DataPolls$Date2[s[i]],DataPolls[s[i],NomCandidat[i]], NomCandidat[i], col= col[i], font=2)
-  #g<-gam(DataPolls[,NomCandidat[[i]]]~s(as.numeric(DataPolls$Date2)))
-  #lines(DataPolls$Date2, g$fitted, col=col[i])
-}
-
-
-sel_1 <- function(num) {which(data_all$district == num )}
-o_1 <- function(sel_1) {order(data_all$Time[sel_1])}
-
-plot(data_all$Time, data_all$diff, type='l')
-
-plot(data_all$Time[sel[0]])
-data_all$district==4
-
