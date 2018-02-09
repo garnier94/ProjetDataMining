@@ -4,7 +4,7 @@
 \alias{groupByGeospatialData}
 \title{groupByGeospatialData}
 \usage{
-groupByGeospatialData(data, area, stations, save_data = TRUE)
+groupByGeospatialData(data, area, stations, year, save_data = FALSE)
 }
 \arguments{
 \item{data}{trips dataframe grouped by hour (see aggregateData for the format)}
@@ -12,6 +12,8 @@ groupByGeospatialData(data, area, stations, save_data = TRUE)
 \item{area}{a Large SpatialPolygonDataFrame containing the different aera . The name of the column containing the area should be SLDLST}
 
 \item{stations}{a data frame containing the position of the stations (latitude, longitude)}
+
+\item{year}{the year}
 
 \item{save_data}{decide whether to save the data or not}
 }

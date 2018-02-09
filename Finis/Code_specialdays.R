@@ -33,5 +33,7 @@ special_days <- data.frame(type_days,special_2013,special_2014,special_2015,spec
 
 rm(special_2013,special_2014,special_2015,special_2016,special_2017)
 
-devtools::use_data(special_days, pkg="~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/Package")
+save(special_days, file =  "special_days.rda")
+
+devtools::use_data(special_days, pkg="~/StatML/Projet/ProjetDataMining/Package", overwrite = TRUE)
 
