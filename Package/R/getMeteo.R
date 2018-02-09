@@ -21,7 +21,7 @@ getMeteo <- function(year, save_data = TRUE){
 
   #Importation et selection des paramètre utiles pour la météo
 
-  Meteo <- riem_measures(station = "MDW", date_start = minDate, date_end = ceiling_date(maxDate , unit='day'))
+  Meteo <- riem_measures(station = "MDW", date_start = minDate, date_end = round_date(maxDate , unit='day'))
   Meteo$Time <- round_date( Meteo$valid ,unit ='hour')
   Meteo$tmpf <- fahrenheit.to.celsius(Meteo$tmpf) # A enlever pour les américains
   MeteoData <- summarise(group_by(Meteo, Time),temp = mean(tmpf, na.rm = TRUE), pluvio = mean(p01i, na.rm = TRUE))

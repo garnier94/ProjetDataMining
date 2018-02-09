@@ -16,6 +16,7 @@ getMeteo(year, save_data = TRUE)
 }
 \description{
 get the meteological data of Chicago on a year
+warning : internet connection is required
 }
 \author{
 Rémy Garnier & Camille Palmier
