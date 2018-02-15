@@ -26,7 +26,9 @@ year = 2014
 dat <- BuildDataSet(year, Data, illinoisCR, Stations, save_data = TRUE)
 
 #2015
-Stations <-  read_csv("~/StatML/DataProjet/Divvy_Stations_2015.csv")
+# There is a missing stations in the file Divvy_Stations 2015. So we need to collect first information about this stations:
+missingStation <- data.frame(id = 394, name = "Clark St & 9th St (AMLI)", latitude = 41.87082, longitude = -87.63125 , dpcapacity = 15, landmark = 0  )
+Stations <- rbind( read_csv("~/StatML/DataProjet/Divvy_Stations_2015.csv"), missingStation)
 Trips2015_1 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2015-Q1.csv")
 Trips2015_2 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2015-Q2.csv")
 Trips2015_3 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2015_07.csv")
@@ -34,10 +36,12 @@ Trips2015_4 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2015_08.csv")
 Trips2015_5 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2015_09.csv")
 Trips2015_6 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2015_Q4.csv")
 
+
+
 Trips2015 <- rbind( Trips2015_1, Trips2015_2, Trips2015_3, Trips2015_4, Trips2015_5, Trips2015_6  )
 rm( Trips2015_1, Trips2015_2, Trips2015_3, Trips2015_4, Trips2015_5, Trips2015_6  )
 Data <- aggregateData(Trips2015,2015)
-BuildDataSet(2015, Data, illinoisCR, Stations, save_data = TRUE)
+dat <-BuildDataSet(2015, Data, illinoisCR, Stations, save_data = TRUE)
 
 #2016
 Stations <-  read_csv("~/StatML/DataProjet/Divvy_Stations_2016_Q4.csv")
