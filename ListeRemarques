@@ -1,0 +1,40 @@
+
+
+Une petite liste de remarques concernant nos données, et quelques solutions auw problèmes soulevés. J'ai souleve ces remarques en implémentant un  modèle GMA 
+
+Time:
+=====
+
+Problème : Time rend à la fois compte de l'heure, du jour, et de l'année. Cela semble bcp pour une seule variable. Par ailleurs, elle est difficile à exploiter en entier
+
+Solution actuelle :
+Pour l'instant, j'utilise une variable Week plutôt que Time en entier, afin de différencier son effet de l'effet heure. Par ailleurs, j'utilise Hour à part. 
+
+Inconvénient:
+La donnée Time comprend bcp de choses, en particulier l'année, et je ne sais pas bien comment l'utiliser, en particulier parce qu'on ne travaille que sur trois ans:
+
+district :
+==========
+
+Problème :
+district est un paramètre discret, ce qui peut être compliqué à prendre en compte. Par ses valeurs comportent des "trous" , vu que les numéros correspondent aux seuls districts couverts par DivvyBike.
+
+Solution  actuelle:
+Remplacer les numéros de districts par une suite d'entiers continus "sans trous". Par exemple, si les districts 1,4,5,19 apparaissent, ils se verront respectivement affecter 1,2,3,4.
+
+ToDo :
+Classer les districts par fréquentation pour les renuméroter
+
+Inconvéninent :
+Comment faire lorsque des nouvelles stations ouvrent dans de nouveaux districts?
+
+Pluvio:
+=======
+
+Problème :
+La relation entre pluvio et nbE semble assez étrange dans le modèle GAM.
+Il semblerait qu'il y ait des jours avec bcp de pluie ou bcp de véllo sont pris quand même
+
+dow :
+====
+Même problème que pour distrcit: Comment prendre en compte une variable discrète dans un modèle GAM
