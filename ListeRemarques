@@ -28,6 +28,8 @@ Classer les districts par fréquentation pour les renuméroter
 Inconvéninent :
 Comment faire lorsque des nouvelles stations ouvrent dans de nouveaux districts?
 
+####Est-ce que prendre le nombre de districts comme degrés de liberté fait sens?
+
 Pluvio:
 =======
 
@@ -35,6 +37,14 @@ Problème :
 La relation entre pluvio et nbE semble assez étrange dans le modèle GAM.
 Il semblerait qu'il y ait des jours avec bcp de pluie ou bcp de véllo sont pris quand même
 
+
 dow :
 ====
 Même problème que pour distrcit: Comment prendre en compte une variable discrète dans un modèle GAM
+
+
+
+=======================================
+Autres remarques:
+
+-prédire diff , ou prédire nbE et nbS séparément semble équivalent pour les modèles GAM. Est-ce logique? 
