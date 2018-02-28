@@ -8,6 +8,7 @@ library(Rborist)
 library(magrittr)
 library(DivvyBikeProject)
 library(lubridate)
+library(tidyverse)
 
 mape<-function(y,ychap)
 {
@@ -24,7 +25,10 @@ data_2016 <- Data
 rm(Data)
 
 datatrain  <- rbind(data_2014,data_2015)
+#datatrain <- summarise(group_by(datatrain, Time, dow, Day,Hour,pluvio, temp), nbEstat =sum(nbE))
+
 datatest <-  data_2016
+#datatest <- summarise(group_by(datatest, Time,dow, Day,Hour,pluvio, temp), nbEstat =sum(nbE))
 
 datatrain$nbEstat <- datatrain$nbE/datatrain$nb_stations
 datatrain$Week <- week(as.POSIXct(strptime(datatrain$Day, "%Y-%m-%d")))
@@ -41,16 +45,16 @@ datatest <- datatest[which(is.element(datatest$district, listdistrict)),]
 ##############################################################################################################################
 ##########################################default random forest
 ##############################################################################################################################
-eq <- nbEstat ~   Week + district + dow + temp  + Hour +pluvio
+eq <- nbEstat ~   Week  + dow  + Hour +pluvio +district
 rf1 <- randomForest(eq, ntree=5, data=datatrain, importance=FALSE)
 rf1.fitted <- predict(rf1,newdata=datatest)
 rmse(datatest$nbEstat, rf1.fitted)
 #0.503 /0.491 pour ntree = 5 
 #0.574 sans pluvio1
 #0.461 pour ntree = 10
-
-
-
+#0.99 sans district
+#0.768 sans temp
+## Nos variables sont pertinentes
 
 Cdistrict =14
 
