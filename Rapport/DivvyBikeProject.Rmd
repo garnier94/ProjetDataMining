@@ -46,7 +46,7 @@ Chaque trajet à vélo est anonymisé et comprend :
 Exemple de 5 trajets réalisés en 2014 :
 
 ```{r warning=FALSE, echo=FALSE}
-setwd("~/Documents/Camille/Data Mining/Rapport")
+setwd("~/StatML/Projet/ProjetDataMining/Rapport/")
 load("Trips_14.RData")
 trips_pres
 ```
@@ -79,13 +79,13 @@ Pour visualiser l'emplacement des stations à Chicago, nous les avons tracés su
 
 ![](Extention.png)
 
-Les stations vélos ont d'abord été réparti au centre de la ville avant de s'étendre vers la banlieu.
+Les stations vélos ont d'abord été réparti au centre de la ville avant de s'étendre vers la banlieue. Le réseau en 2017 est sensiblement le même que le réseau de 2016.
 
 ### Autres représentations
 
 ![](Fréqu.png)
 
-Si on regarde la fréquentation des stations en 2016, on voit que les vélos les plus utilisés sont ceux du centre ville. 
+Si on regarde la fréquentation des stations en 2016, on remarque que les vélos les plus utilisés sont ceux du centre ville. Par ailleurs, il y a un fort écart entre les stations les moins utilisées (moins de 200 vélos empruntés par an) et les stations les plus utilisées (jusqu'à 92000 vélos empruntés).
 
 **Rajouter changement dans les stations.**
 
@@ -93,27 +93,55 @@ Si on regarde la fréquentation des stations en 2016, on voit que les vélos les
 
 Nous présenterons dans cette partie les manipulations que nous avons effectué sur les données. Cette partie est centrale puisqu'elle a nécessité beaucoup de travail et de temps.
 
-Les données que l'on trouve sur le site de Divvy sont divisées par semestre. Les 9 fichiers de données ne sont pas homogènes. Les variables changent parfois de nom et le format des données n'est pas toujours le même. Pour unifier nos données et pouvoir les regrouper, nous avons mis a disposition dans notre package la fonction *BuildDataSet.R*.
+Les données que l'on trouve sur le site de Divvy sont divisées par semestre, ou par mois selon les années. Les données n'ont pas un format homogène. Les variables changent parfois de nom et le format des données n'est pas toujours le même. 
 
+Notre jeu de données vit en grande dimension (plus de 13 millions de trajets et une dizaine de variables). Pour disposer de la capacité nécessaire à faire tourner les modèles, nous avons réduit la dimension en réalisant plusieurs agrégations. 
+
+### Agrégation temporelle
+
+Nous avons compté, pour chaque station, le nombre de vélos entrant (nbE) et le nombre de vélos sortant (nbS) à chaque heure. Nous avons donc perdu l'information sur les trajets, puisque qu'on ne sait plus d'où vient chaque vélo. Par ailleurs, nous avons négligé les informations sur les utilisateurs. 
+
+L'aggrégation temporelle (ainsi que la standardisation du format des données) se fait en utilisant la fonction **aggregateData** du package.
+
+### Agrégation spatialle
+
+Le fait que de nouvelles stations s'ouvrent constamment, ainsi que le fait qu'elles sont parfois déplacées, nous a conduit à grouper les données géographiquement. Ainsi, nous supposons que des stations géographiquement proche se comportent de la même façon. Pour gérer les données géographiques, nous nous avons utilisé les packages R *rgdal* et *raster*. Etant donné un découpage spatial de la ville de Chicago contenue dans le Large SpatialPolygonDataFrame *area*, ainsi qu'un fichier *data* regroupant les données aggrégé temporellement sur les *stations*, on obtient une aggregation spatiale via la fonction **groupByGeospatialData(data, area, stations, year,  save_data = FALSE)**
+   
+Pour nos tests, nous avons choisi le découpage géographique par circonscription legislative pour la chambre basse de l'Illinois, obtenue sur le site du [recensement](https://www.census.gov/) américain. Ce découpage n'est objectivement pas très bon, notamment à cause de la pratique du [gerrymandering](https://fr.wikipedia.org/wiki/Gerrymandering). En effet, la forme des circonscriptions est généralement tortueuse (voir carte plus haut) et regroupe des populations différentes pour des considérations électorales. Cependant, il s'agissait du seul regroupement à la bonne échelle que nous avons pu trouver.  Par ailleurs, comme on le verra, ce découpage est déjà assez informatif. 
+
+On peut ainsi regrouper les stations dans une vingtaine de regions géographiques différentes, qui comportent en moyenne chacune 24 stations (avec un écart type de 18).
+
+### Ajouts de variables explicatives
+
+Nous avons rajouté $3$ variables explicatives à notre jeu de données :
+
+* La pluviométrie (*pluvio*) et la température (*temp*) grace au package *riem*.
+
+* La variable "Day of Week" (*dow*) qui varie de 1 à 8 : lundi = 1, ..., vendredi = 7 et 8 pour les jours fériés.
+
+Ces variables sont ajoutés respectivement par les fonctions **getMeteo** et **getSpecialDays**.
+
+
+L'ensembles des manipulation décrites dans les trois derniers paragraphes ont été regroupées dans la fonction **BuildDataSet**.
+
+Voici un extrait de nos données finales :
+```{r warning=FALSE, echo=FALSE}
+load("~/StatML/Projet/ProjetDataMining/FullData2015.RData")
+head(Data, 5)
 ```
-BuildDataSet(year, raw_data, districts, Stations, save_data = FALSE)
-```
 
-**Vérifier avec Rémy**
-
-Notre jeu de données vit en grande dimension (plus de13 millions de trajets et une dizaine de variables). Pour disposer de la capacité nécessaire à faire tourner les modèles, nous avons réduit la dimension en réalisant plusieurs agrégations. 
-
-### Agrégation géographie/temps
-
-Nous avons réalisé deux agrégations pour réduire la dimension de notre jeu de données. La première est temporelle : nos données sont agrégées par heure; et la seconde est spatiale puisque nous avons choisi de regrouper les stations par district. Chicago est divisé en **Demander à Rémy** districts.
-
-Nous avons choisi la séparation en districts pour se calquer sur la statistique américaine (voir site Census). Bien que nous n'avons pas ajouté de variables sociales, il est tout à fait possible de le faire avec notre package. On peut voir le découpement de la ville en district sur les deux derniers graphiques.
-
-**Rajouter les fonctions du package + nom du package qui nous a permis de faire la séparation spatiale.**
 
 ### Définition de notre série d'intérêt
 
-Nous nous sommes intéressés à trois séries temporelles. Les deux premières sont les séries d'entrée et de sortie de vélos. La troisième est un combinaison linéaire des deux premières: c'est le différentiel entre les vélos rentrant et les vélos sortant nommé *diff*.
+Nous avons proposé $3$ série d'interet différentes par région:
+
+ * **nbEstat** le nombre moyen de vélos par station entrant dans la région à une heure donnée par
+ 
+ * **nbSstat** le nombre moyen de vélos par station sortant de la région à chaquye
+ 
+ * **diff** $ = nbEstat - nbStat$ la différence entre le nombre de vélos entrant et sortant de chaque région par heure et par station
+ 
+Nous estimons que cette dernière statistique est la plus utile, car elle peut servir à l'entreprise pour determiner comment elle doit déplacer les vélos entre les différentes régions afin de s'assurer que les stations ne soient jamais complètement vides ou complètement pleines. 
 
 **Mettre graphiques des trois séries.**
 
@@ -121,21 +149,7 @@ Nous nous sommes intéressés à trois séries temporelles. Les deux premières 
 
 ![](Diffplot.png)
 
-### Ajouts de variables explicatives
 
-Nous avons rajouté $4$ variables explicatives à notre jeu de données :
-
-* La pluviométrie et la température trouvées dans le package R *Météo*.
-
-* Les 12 jours fériés de l'Illinois.
-
-* La variable "Day of Week" (*dow*) qui varie de 1 à 8 : lundi = 1, ..., vendredi = 7 et 8 pour les jours fériés.
-
-Voici un extrait de nos données finales :
-```{r warning=FALSE, echo=FALSE}
-load("~/Documents/Camille/Data Mining/FullData2015.RData")
-head(Data, 5)
-```
 
 ### Quelques visualisations 
 
