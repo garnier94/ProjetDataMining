@@ -1,11 +1,13 @@
 ---
-title: "Divvy Bike Project"
-author: "Rémy Garnier - Camille Palmier"
-date: "28 février 2018"
+title: <p style="text-align:center";>Divvy Bike Project</p>
+author: <p style="text-align:center";>Rémy Garnier - Camille Palmier</p>
+date: <p style="text-align:center";>28 février 2018</p>
 output:
   html_document: default
   pdf_document: default
----
+---  
+
+<p>&nbsp; </p>
 
 # I- Introduction
 
@@ -23,7 +25,7 @@ Nous présenterons les fonctions présentes dans notre package au fur et à mesu
 
 ### Le jeu de données
 
-Divvy est le système de partage de vélos de la ville de Chicago, avec $6000$ vélos disponibles à plus de $570$ stations à travers Chicago et Evanston. Divvy, comme les autres systèmes de vélos de libre-service, se compose d'une flotte de vélos robustes et durant qui sont enfermés dans un réseau de stations d'accueil dans toute la région. Les vélos peuvent être déverrouillés à partir d'une station et renvoyés à n'importe quelle autre station du système. Divvy offre aux résidents et aux visiteurs une option de transport pratique pour se déplacer et explorer Chicago.
+Divvy est le système de partage de vélos de la ville de Chicago, avec 6 000 vélos disponibles à plus de 570 stations à travers Chicago et Evanston. Divvy, comme les autres systèmes de vélos de libre-service, se compose d'une flotte de vélos qui sont enfermés dans un réseau de stations d'accueil dans toute la région. Les vélos peuvent être déverrouillés à partir d'une station et renvoyés à n'importe quelle autre station du système. Divvy offre aux résidents et aux visiteurs une option de transport pratique pour se déplacer et explorer Chicago.
 
 Divvy est un programme du Département des Transports de Chicago (CDOT), qui possède les vélos, les stations et les véhicules de la ville. Le financement initial du programme provenait de subventions fédérales pour des projets qui favorisent le redressement économique, réduisent la congestion du trafic et améliorent la qualité de l'air, ainsi que des fonds supplémentaires provenant du programme de financement des augmentations d'impôt de la Ville. En 2016, Divvy s'est étendu à la banlieue voisine d'Evanston grâce à une subvention de l'État de l'Illinois.
 
@@ -39,9 +41,9 @@ Chaque trajet à vélo est anonymisé et comprend :
 
 * Station d'arrivée 
 
-* Type de coureur (membre, tour unique et passe d'exploration)
+* Type d'utilisateur (membre, tour unique ou passe d'exploration)
 
-* Si un membre voyage, il inclura également le sexe et l'année de naissance du membre
+* Si un membre voyage, le sexe et l'année de naissance du membre seront inclus
 
 Exemple de 5 trajets réalisés en 2014 :
 
@@ -79,50 +81,49 @@ Pour visualiser l'emplacement des stations à Chicago, nous les avons tracés su
 
 ![](Extention.png)
 
-Les stations vélos ont d'abord été réparti au centre de la ville avant de s'étendre vers la banlieue. Le réseau en 2017 est sensiblement le même que le réseau de 2016.
+Les stations vélos ont d'abord été réparti au centre de la ville avant de s'étendre vers la banlieue. Le réseau en 2017 est sensiblement le même que le réseau de 2016 (seulement 4 stations de plus).
 
 ### Autres représentations
 
 ![](Fréqu.png)
 
-Si on regarde la fréquentation des stations en 2016, on remarque que les vélos les plus utilisés sont ceux du centre ville. Par ailleurs, il y a un fort écart entre les stations les moins utilisées (moins de 200 vélos empruntés par an) et les stations les plus utilisées (jusqu'à 92000 vélos empruntés).
-
-**Rajouter changement dans les stations.**
+Si on regarde la fréquentation des stations en 2016, on remarque que les vélos les plus utilisés sont ceux du centre ville. Par ailleurs, il y a un fort écart entre les stations les moins utilisées (moins de 200 vélos empruntés par an) et les stations les plus utilisées (jusqu'à 92 000 vélos empruntés).
 
 # III - Transformation des données
 
 Nous présenterons dans cette partie les manipulations que nous avons effectué sur les données. Cette partie est centrale puisqu'elle a nécessité beaucoup de travail et de temps.
 
-Les données que l'on trouve sur le site de Divvy sont divisées par semestre, ou par mois selon les années. Les données n'ont pas un format homogène. Les variables changent parfois de nom et le format des données n'est pas toujours le même. 
+Les données que l'on trouve sur le site de Divvy sont divisées par semestre, ou par mois selon les années. Les données n'ont pas un format homogène. Les variables changent parfois de nom et le format des données n'est pas toujours le même. On a également été confronté à un problème au niveau des stations : elles peuvent changer de noms au cours du temps ou se déplacer de quelques mètres.
 
-Notre jeu de données vit en grande dimension (plus de 13 millions de trajets et une dizaine de variables). Pour disposer de la capacité nécessaire à faire tourner les modèles, nous avons réduit la dimension en réalisant plusieurs agrégations. 
+Notre jeu de données vit en grande dimension (plus de 13 millions de trajets et une dizaine de variables). Pour disposer de la capacité nécessaire pour faire tourner les modèles, nous avons réduit la dimension en réalisant plusieurs agrégations. 
 
 ### Agrégation temporelle
 
 Nous avons compté, pour chaque station, le nombre de vélos entrant (nbE) et le nombre de vélos sortant (nbS) à chaque heure. Nous avons donc perdu l'information sur les trajets, puisque qu'on ne sait plus d'où vient chaque vélo. Par ailleurs, nous avons négligé les informations sur les utilisateurs. 
 
-L'aggrégation temporelle (ainsi que la standardisation du format des données) se fait en utilisant la fonction **aggregateData** du package.
+L'agrégation temporelle (ainsi que la standardisation du format des données) se fait en utilisant la fonction **aggregateData** du package.
 
-### Agrégation spatialle
+### Agrégation spatiale
 
-Le fait que de nouvelles stations s'ouvrent constamment, ainsi que le fait qu'elles sont parfois déplacées, nous a conduit à grouper les données géographiquement. Ainsi, nous supposons que des stations géographiquement proche se comportent de la même façon. Pour gérer les données géographiques, nous nous avons utilisé les packages R *rgdal* et *raster*. Etant donné un découpage spatial de la ville de Chicago contenue dans le Large SpatialPolygonDataFrame *area*, ainsi qu'un fichier *data* regroupant les données aggrégé temporellement sur les *stations*, on obtient une aggregation spatiale via la fonction **groupByGeospatialData(data, area, stations, year,  save_data = FALSE)**
+Le fait que de nouvelles stations s'ouvrent constamment, ainsi que le fait qu'elles sont parfois déplacées, nous a conduit à grouper les données géographiquement. Ainsi, nous supposons que des stations spatialement proche se comportent de la même façon. 
+
+Pour gérer les données géographiques, nous nous avons utilisé les packages R *rgdal* et *raster*. Etant donné un découpage spatial de la ville de Chicago contenue dans le Large SpatialPolygonDataFrame *area*, ainsi qu'un fichier *data* regroupant les données agrégées temporellement sur les *stations*, on obtient une agrégation spatiale via la fonction **groupByGeospatialData(data, area, stations, year,  save_data = FALSE)**
    
-Pour nos tests, nous avons choisi le découpage géographique par circonscription legislative pour la chambre basse de l'Illinois, obtenue sur le site du [recensement](https://www.census.gov/) américain. Ce découpage n'est objectivement pas très bon, notamment à cause de la pratique du [gerrymandering](https://fr.wikipedia.org/wiki/Gerrymandering). En effet, la forme des circonscriptions est généralement tortueuse (voir carte plus haut) et regroupe des populations différentes pour des considérations électorales. Cependant, il s'agissait du seul regroupement à la bonne échelle que nous avons pu trouver.  Par ailleurs, comme on le verra, ce découpage est déjà assez informatif. 
+Pour nos tests, nous avons choisi le découpage géographique par circonscriptions législatives pour la chambre basse de l'Illinois, obtenue sur le site du [recensement](https://www.census.gov/) américain. Ce découpage n'est objectivement pas très bon, notamment à cause de la pratique du [gerrymandering](https://fr.wikipedia.org/wiki/Gerrymandering). En effet, la forme des circonscriptions est généralement tortueuse (voir carte plus haut) et regroupe des populations différentes pour des considérations électorales. Cependant, il s'agissait du seul regroupement à la bonne échelle que nous avons pu trouver. Par ailleurs, comme on le verra, ce découpage est déjà assez informatif. 
 
-On peut ainsi regrouper les stations dans une vingtaine de regions géographiques différentes, qui comportent en moyenne chacune 24 stations (avec un écart type de 18).
+On peut ainsi regrouper les stations dans une vingtaine de regions géographiques différentes qui comportent chacune en moyenne 24 stations (avec un écart type de 18).
 
 ### Ajouts de variables explicatives
 
 Nous avons rajouté $3$ variables explicatives à notre jeu de données :
 
-* La pluviométrie (*pluvio*) et la température (*temp*) grace au package *riem*.
+* La pluviométrie (*pluvio*) et la température (*temp*) grâce au package *riem*.
 
 * La variable "Day of Week" (*dow*) qui varie de 1 à 8 : lundi = 1, ..., vendredi = 7 et 8 pour les jours fériés.
 
 Ces variables sont ajoutés respectivement par les fonctions **getMeteo** et **getSpecialDays**.
 
-
-L'ensembles des manipulation décrites dans les trois derniers paragraphes ont été regroupées dans la fonction **BuildDataSet**.
+L'ensembles des manipulations décrites dans les trois derniers paragraphes ont été regroupées dans la fonction **BuildDataSet**.
 
 Voici un extrait de nos données finales :
 ```{r warning=FALSE, echo=FALSE}
@@ -135,19 +136,21 @@ head(Data, 5)
 
 Nous avons proposé $3$ série d'interet différentes par région:
 
- * **nbEstat** le nombre moyen de vélos par station entrant dans la région à une heure donnée par
+ * **nbEstat** : le nombre moyen de vélos par station entrant dans la région à une heure donnée par
  
- * **nbSstat** le nombre moyen de vélos par station sortant de la région à chaquye
+ * **nbSstat** : le nombre moyen de vélos par station sortant de la région à chaquye
  
- * **diff** $ = nbEstat - nbStat$ la différence entre le nombre de vélos entrant et sortant de chaque région par heure et par station
+ * **diff** = nbEstat - nbStat : la différence entre le nombre de vélos entrant et sortant de chaque région par heure et par station
  
 Nous estimons que cette dernière statistique est la plus utile, car elle peut servir à l'entreprise pour determiner comment elle doit déplacer les vélos entre les différentes régions afin de s'assurer que les stations ne soient jamais complètement vides ou complètement pleines. 
 
-**Mettre graphiques des trois séries.**
-
-![](NdEplot.png)
-
 ![](Diffplot.png)
+
+Ce premier graphique permet de visualisation la variable représentant la différence entre le nombre de vélos entrant et le nombre de vélos sortant. La forme générale est la même : les vélos sont moins empruntés en début d'année (période hivernale - janvier/février). C'est en été que la différence entrant/sortant est la plus importante. 
+
+Pour bien comprendre la forme de la série, intéressons nous à ces trois séries sur une période de temps restreinte : soit la deuxième semaine du mois de *juillet 2014*.
+
+
 
 
 
