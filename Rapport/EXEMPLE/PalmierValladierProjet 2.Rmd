@@ -1,0 +1,442 @@
+---
+title: "Projet R - Prédiction de la consommation éléctrique"
+author: "Camille Palmier - Arnaud Valladier"
+date: "10 Mars 2016"
+output: pdf_document
+---
+
+```{r results='hide', echo=FALSE, message=FALSE, warning=FALSE}
+rm(list=objects())
+graphics.off()
+setwd("/Volumes/CAMILLE/Projet")
+#setwd("~/Fac/M1/ProjetR - annee2")
+library("magrittr")
+library("timeDate")
+library("mgcv")
+library("xts")
+###Creation du data file:
+data<-read.table("data_elec0.txt", header=T, sep='\t')
+n = length(data[,1])
+
+###Conversion de la premiere colonne en type "date":
+Date = as.POSIXct(strptime(data$date,"%Y-%m-%d %H:%M:%S"))
+data$date <- Date
+rm(Date)
+```
+
+#Présentation
+
+Nous souhaitons prévoir la consommation en électricité de l'année 2008 aux Etats-Unis à partir des données recoltées au court des années 2004 à 2007. Nous concentrerons nos efforts sur la zone 2 du jeu de données fourni. 
+
+Dans un premier temps, nous allons effectuer une analyse descriptive afin de mettre en lumière la présence d'une tendance et de plusieurs saisonnalités emboîtées. Nous exhiberons également les variables explicatives de la consommation, telles que la température de l'air (données météorologiques), l'heure de la journée, le mois, le jour de la semaine etc. 
+
+Dans un deuxième temps, nous construirons un modèle de prévision par régression sur les variables explicatives. Ces observations nous permettront de bâtir un modèle de régression. Pour tester ce modèle, nous découperons notre jeu de données en deux. Les années 2004 à 2006 seront nos données d'apprentissage, et 2007 sera notre année test. 
+
+À chaque régression, nous évaluerons le taux d'erreur entre les données réelles de 2007 et celles prédites par notre modèle de régression. Nous ne bâtirons pas notre modèle sur toutes les variables explicatives, nous chercherons un modèle qui prédise le mieux possible avec le moins de données possibles. Ces variables seront sélecionnées en partant d'un modèle très simple puis en l'ettoffant au fur et à mesure en sélectionnant des variables qui amèliorent sensiblement la qualité de la prédiction.
+
+
+
+
+## 1.Analyse desciptive des données
+Les données sont issues de relevés de consommation éléctrique et de température effectuées toutes les heures pendant 4 ans. Jetons un oeil sur les données de la zone 2 :
+
+```{r, echo=FALSE, warning=FALSE}
+sd    = sd(data$Zone2)
+mean  = mean(data$Zone2)
+
+zone2.xts<-xts(data$Zone2, order.by = data$date)
+hour <- as.factor(.indexhour(zone2.xts))
+day  <- as.factor(.indexday(zone2.xts))
+week <- as.factor(.indexweek(zone2.xts))
+month<- as.factor(.indexmon(zone2.xts))
+
+conso_horaire<-tapply(zone2.xts, hour, mean)
+conso_journ<-tapply(zone2.xts, day, mean)
+conso_hebdo<-tapply(zone2.xts, week, mean)
+conso_mensuelle<-tapply(zone2.xts, month, mean)
+
+nw = length(conso_hebdo)
+h  = 52     
+noyau <- ksmooth(1:nw, conso_hebdo, kernel=c("normal"), bandwidth=h)  
+reg <- lm(noyau$y~noyau$x)
+
+plot(data$date,data$Zone2, type='l', xlab="", ylab="", main="Consommation électrique de la zone 2")
+lines(data$date, reg$coeff[1] + reg$coeff[2]/(7*24)*data$Time, col='red', type='l', lwd=2)
+abline(h=reg$coefficients[1], lty=2, col=7)
+legend('topleft', c("ordonnee a l'origine", 'tendance'), 
+       col=c('orange', 'red'), lty=c(2,1))
+
+rm(noyau, reg, h, nw)
+```
+
+Nous avons 33720 relevés. Nous remarquons que certains intervalles de données sont manquants. Nous tâcherons de compléter ces relevés à l'aide d'un modèle de prédiction.
+
+On constate une faible tendance à la hausse ainsi qu'une saisonnalité annuelle. La consommation éléctrique va dépendre des températures et des indices de luminosité et d'humidité. Les consommations élevées en hiver doivent correspondre à l'utilisation du chauffage et de l'éclairage éléctrique provoqués par des températures faibles et une luminosité faible. Les consommations élevées en été doivent correspondre à l'utilisation de la climatisation provoquée par des températures hautes et un taux d'humidité possiblement élevé. 
+
+Ne connaissant pas la position géographique de la zone sur laquelle nous travaillons, nous n'avons pas pu compléter nos données avec les indices de luminosité et d'humidité. Nous allons cependant utiliser l'influence des températures pour nos prévisions.
+
+Afin d'avoir une idée précise des saisonnalités, nous avons tracé l'autocorrélogramme de nos données :
+
+```{r, echo=FALSE}
+acf(data$Zone2, lag.max = 10*24, main="Autocorrelogramme de la Zone 2")
+abline(v=24, col='red', lty=2)
+abline(v=7*24, col='red', lty=2)
+```
+
+Ce graphique nous a permis de confirmer qu'il y a peu de tendance dans nos données. Le graphe de l'autocorrélation partielle confirme également une double saisonnalité : par heure et par jour.
+
+Annalysons maintenant nos données à l'aide de certaines statistiques descriptives. Nous allons regarder l'influence des différentes échelles temporaires (heure, jour, mois).
+
+```{r, echo=FALSE}
+boxplot(data$Zone2 ~ data$Hour,col="lightblue",pch=20,cex=0.5, main="Consommation par heure de la zone 2", xlab="Heure")
+#lines(1:24, data$Zone2[4513:(4513+23)], col="red")
+#lines(1:24, data$Zone2[2761:(2761+23)], col="blue")
+```
+
+Nous constatons une évolution de la consommation par heure ainsi que de grands écarts de consommation suivant les heures de la journée. Nous allons devoir prendre en compte l'influence de cette variable dans nos modèles de prédiction.
+
+Regardons à present la consommation selon les jours :
+
+
+```{r, echo=FALSE}
+par(mfrow=c(1,1))
+consoJSpe <- tapply(data$Zone2, data$daytype, mean)
+plot(1:24, 100*sort(consoJSpe)/mean, main='Consommation par type de jour en pourcentage \n par rapport a la moyenne',
+     type='b', xlab='', ylab='consommation', xaxt="n")
+axis(1, at=seq(1, 24, by=1), labels = FALSE)
+text(seq(1, 24, by=1), par("usr")[3] - 3, labels = names(sort(consoJSpe)), srt = 45, pos = 2, xpd = TRUE, cex=0.7)
+sepx <- c(0.5, 4.5, 13.5, 18.5, 24.5)
+sepy <- c(75, 85, 100, 107, 122)
+rect(sepx[1], sepy[1], sepx[2], sepy[2], border='orange')
+rect(sepx[2], sepy[2], sepx[3], sepy[3], border='green')
+rect(sepx[3], sepy[3], sepx[4], sepy[4], border='blue')
+rect(sepx[4], sepy[4], sepx[5], sepy[5], border='red')
+abline(h=100, lty=2, col='red')
+
+#Consomation la plus basse: Memorial Day:
+dataN   <- subset(data, daytype == 'USMemorialDay', selec = c(date, Zone2))
+N.xts   <- xts(dataN$Zone2, order.by = dataN$date)
+hourN   <- as.factor(.indexhour(N.xts))
+meanMD  <- tapply(N.xts, hourN, mean)
+
+#Consomation de plus basse variance: le nouvel an:
+dataN   <- subset(data, daytype == 'USNewYearsDay', selec = c(date, Zone2))
+N.xts   <- xts(dataN$Zone2, order.by = dataN$date)
+hourN   <- as.factor(.indexhour(N.xts))
+meanNY  <- tapply(N.xts, hourN, mean)
+
+#Consommation jours normaux du lundi au vendredi:
+dataN   <- subset(data, daytype == 'lundi'|daytype =='mardi'|daytype =='mercredi'
+                  |daytype =='jeudi'|daytype =='vendredi',selec = c(date, Zone2)) 
+N.xts   <- xts(dataN$Zone2, order.by = dataN$date)
+hourN   <- as.factor(.indexhour(N.xts))
+meanWD  <- tapply(N.xts, hourN, mean)
+
+#Consommation du WE:
+dataN   <- subset(data, daytype == 'samedi' | daytype == 'dimanche', selec = c(date, Zone2))
+N.xts   <- xts(dataN$Zone2, order.by = dataN$date)
+hourN   <- as.factor(.indexhour(N.xts))
+meanWE  <- tapply(N.xts, hourN, mean)
+
+#Consommation la pus haute: president Day
+dataN   <- subset(data, daytype == c('USPresidentsDay'), selec = c(date, Zone2))
+N.xts   <- xts(dataN$Zone2, order.by = dataN$date)
+hourN   <- as.factor(.indexhour(N.xts))
+meanPD  <- tapply(N.xts, hourN, mean)
+
+
+plot(dataN$date[1:24], meanMD, type='l', main="Profil horaire suivant différents types de jours", xlab='heures', 
+     ylab='conso', col='orange', ylim=c(100000,240000))
+lines(dataN$date[1:24], meanWD, col='blue')
+lines(dataN$date[1:24], meanWE, col='green')
+lines(dataN$date[1:24], meanPD, col='red')
+lines(dataN$date[1:24], meanNY, col='purple')
+legend('bottomright', c('Memorial Day', 'Nouvel An', 'Week ends', 'en semaine', 'Presidents Day'), lty = c(1,1,1,1,1), 
+       col=c('orange', 'purple', 'green', 'blue', 'red'), cex=0.8)
+
+#On remarque bien des profils de consommation par heure différents! Nous en prendrons compte dans notre 
+#modèle de prévision!
+
+
+rm(sepx, sepy, dataN, N.xts, hourN, meanWE, meanWD, meanPD, meanMD, meanNY)
+
+
+```
+
+On met en évidence un profil de consommation suivant les évènements. Par exemple, les jours fériés et les week-end montrent une plus faible consommation tandis que le President Day montre une consommation plus élevée. On en déduit qu'il faudra prévoir des pics de consommation durant ces jours spéciaux, et donc connaître leurs profils horaires. Ces différences de profils sont visibles sur le deuxième graphe.
+
+
+Voici la consommation par mois :
+
+```{r, echo=FALSE}
+
+boxplot(data$Zone2 ~ data$Month,col="lightblue",pch=20,cex=0.5, main="Consommation par mois de la zone 2", xlab="Mois")
+
+rm(zone2.xts, conso_hebdo, conso_horaire, conso_journ, conso_mensuelle, consoJSpe, hour, day, week, month)
+```
+
+On remarque une plus grande dispersion en été qu'en hiver avec des valeurs extrêmes concentrées dans les période de transition entre hiver/printemps et été/automne. Ces écarts peuvent s'expliquer par des jours anormalement froids ou anormalement chauds. La grande dispersion en été s'explique par de plus grandes oscillations de consommation dans une même journee dûe au comportement des Americains vis-à-vis de la climatisation. Il sera pertinent de prendre en compte ce phénomène.
+
+Regardons le graphe de la consommation par rapport à la température (on montrera à posteriori que la station 11 est une bonne station de travail) :
+
+```{r, echo=FALSE}
+plot(data$Station11, data$Zone2, pch=20, main="Profil de la consommation en fonction des températures",
+     xlab="température en F", ylab="consommation")
+```
+
+
+Nous remarquons que c'est une fonction linéaire par morceaux qui passerait le mieux dans le nuage de points. Nous allons utiliser le modèle GAM pour la régression sur les températures.
+
+
+## 2. Modèle de prédiction
+
+### 2.1 Influence de la tendance et des températures
+
+Nous séparons nos données dans deux tables distinctes. La première contient les informations des années 2004 à 2006, la deuxième celles de 2007. Dans un premier temps, nous voulons modeliser l'influence de la température. Nous effectuons une simple régression lineaire sur les jours et non linéaire sur les données d'un couple de station. Ainsi nous prenons en compte l'influence de la tendance et des températures. Le code suivant permet de trouver le couple de station qui va minimiser l'erreur de prédiction :
+
+```{r, include=FALSE}
+
+sep <- which(data$date == '2007-01-01 00:00:00')
+
+data0a <- data[1:sep,]        #données d'apprentissage
+data0b <- data[-c(1:sep),]    #données de test 
+
+
+rmse<-function (eps)
+{
+  return(round(sqrt(mean(eps^2,na.rm=TRUE)),digits=0))
+}
+
+mape<-function (y,ychap)
+{
+  return(round(100*mean(abs(y-ychap)/abs(y)),digits=2))
+}
+
+fit.error <- function(data=reg.station){
+  lapply(data, function(x){rmse(data0a$Zone2 - x$fitted)})%>%unlist
+}
+
+fit.mape <- function(data=reg.station){
+  lapply(data, function(x){mape(data0a$Zone2, x$fitted )})%>%unlist
+}
+
+forecast.mape <- function(data = reg.forecast){
+  lapply(data, function(x){mape(data0b$Zone2, x)})%>%unlist
+}
+
+forecast.error <- function(data=reg.forecast){
+  lapply(data, function(x){rmse(data0b$Zone2 - x)})%>%unlist
+}
+
+adj.rsquare<-function(data = reg.station){
+  lapply(data,function(x){summary(x)$adj.r.squared})%>%unlist
+}
+
+NStation   <- 11
+ColStation <- c(29:39)
+
+```
+
+```{r}
+Station      <- matrix(nrow = NStation, ncol = NStation)
+reg.station  <-list()
+reg.forecast <-list()
+eq           <-list()
+
+
+for (i in c(1:NStation)){
+  for(j in c(1:NStation)){
+      Station[i,j] <- paste("s(Station",i,",k=10, bs='cr')+s(Station",j,",k=10, bs='cr')",
+                            sep = "")
+  }
+}
+
+
+R.squ           = matrix(ncol=NStation, nrow=NStation)
+fit.err         = R.squ
+forecast.err    = R.squ
+fit.map         = R.squ
+forecast.map    = R.squ
+
+
+for(i in c(1:NStation)){
+  for(j in c(1:i)){
+    eq                   <- as.formula(paste("Zone2~Time+",Station[j,i],sep=""))
+    reg.station          <- gam(eq, data=data0a)
+    reg.forecast         <- predict(reg.station, data0b)
+    R.squ[i,j]           <- summary(reg.station)$r.sq
+    fit.err[i,j]         <- rmse(data0a$Zone2 - reg.station$fitted)
+    forecast.err[i,j]    <- rmse(data0b$Zone2 - reg.forecast)
+    fit.map[i,j]         <- mape(data0a$Zone2, reg.station$fitted )
+    forecast.map[i,j]    <- mape(data0b$Zone2, reg.forecast)
+  }
+}
+
+
+```
+
+```{r, echo=FALSE}
+
+plot(1:(11*11),forecast.map, main="Pourcentage d'erreur de prévision par couple de station", ylab="Pourcentage d'erreur", xlab="", axes=F)
+leg <- rep('', 121)
+leg[55] <- "(5,11)" 
+#axis(1,c(1:(NStation^2)), labels=leg, las=2)
+axis(1,c(1,55,121),c("","(5,11)",""))
+axis(2)
+points(x=which.min(forecast.map), y=min(forecast.map, na.rm = T), col="red", pch=3, lwd=3)
+text(x=which.min(forecast.map), y=min(forecast.map, na.rm = T), col="red", min(forecast.map, na.rm = T), pos=2)
+
+formule.gam.double <- "s(Station5, k=10, bs='cr')+s(Station11, k=10, bs='cr')"
+```
+```{r, include=FALSE}
+rm(eq, fit.map, fit.err, forecast.map, forecast.err, reg.forecast, reg.station, Station, R.squ, leg)
+```
+
+
+On trouve que le couple (5,11) minimise l'erreur de prédiction. C'est ce couple que nous utiliserons par la suite. On obtient un coefficient de corrélation R2 égal à 54%. 
+
+
+### 2.2 Influence de la saisonnalité annuelle et de la saisonnalité journalière
+
+Nous allons désormais prendre en compte l'influence des composantes temporaires dans notre modèle. La variable Hour expliquera la saisonnalité journalière. Nous avons vu que les profils horaires changent selon le type de jour, nous allons donc rajouter cette information à la régression. La variable Dow du jeu de données décrit le numéro de la mesure faite au cours de l'année. 
+
+```{r}
+eq        <- as.formula(paste("Zone2~Time + s(Hour, k=10, by=daytype) + s(Toy, bs='cc') +", 
+                              formule.gam.double, sep=""))
+```
+
+```{r, echo=FALSE}
+reg       <- gam(eq, data=data0a)
+predict   <- predict(reg, data0b)
+
+#summary(reg)
+
+R              <- summary(reg)$r.sq                  #0.82  la c'est mieux!!   0.816 sans la 9
+fit.er         <- rmse(data0a$Zone2 - reg$fitted)    #14293
+forecast.er    <- rmse(data0b$Zone2 - predict)       #16361
+fit.map        <- mape(data0a$Zone2, reg$fitted )    #6.94
+forecast.map   <- mape(data0b$Zone2, predict)        #7.35  
+
+
+#Fittage:
+plot(data0a$date, data0a$Zone2, type='l', main="Fittage des données d'apprentissage", xlab="", ylab="consommation")
+lines(data0a$date, reg$fitted.values, col='red')
+
+#prédiction:
+plot(data0b$date, data0b$Zone2, type='l', main="Fittage des données de test", xlab="", ylab="consommation")
+lines(data0b$date, predict, col='red')
+```
+
+Nous avons significativement améliore notre modèle. Nous sommes passé de 11.61% à 7.35% en terme d'erreur de prédiction et la variance des données expliquée passe de 54% à 81%. 
+
+Nous pouvons encore améliorer notre modèle. On constate qu'on ne s'adapte pas tout à fait aux valeurs extrêmes de nos données d'apprentissage, nous ne prédisons pas certains pics de nos données de test. Nous souhaiterions avoir une erreur de prévision proche des 5%. Pour cela nous allons étudier les résidus de notre modèle actuel. 
+
+##3 Etude des résidus - modèle SARIMA
+
+Nous avons récuperé les résidus de notre modèle gam. Leur étude va nous permettre de savoir s'il reste de l'information non exploitée dans notre modèle. Voici le graphique des résidus : 
+
+```{r, echo=FALSE}
+data$residus <- data$Zone2 - c(reg$fit, predict)
+
+data0a <- data[1:sep,]
+data0b <- data[-c(1:sep),]
+
+plot(data0b$date, data0b$residus, type='l', main="Résidus de test", xlab="", ylab="")
+#on voit de la saisonnalité et une tendance => mauvais!
+
+sep2        <- length(data0b[,1])/2
+res.detude  <- data0b$residus[1:sep2]
+
+#acf(res.detude, lag.max = 9*24)
+#pacf(res.detude, lag.max = 9*24)
+```
+
+
+Sur l'autocorrélogramme, on remarque qu'il reste une tendance ainsi que les saisonnalité journalière et hebdomadaire. En effet, on voit des pics à 24h et à 7*24h, de plus l'autocorrélation ne tend pas exponentiellement vers 0. 
+
+Nous allons construire un modèle SARIMA en différentiant nos résidus. Pour que le modèle fonctionne bien sur nos ordinateurs, nous avons coupé en deux les résidus de la partie test.
+
+Le modèle SARIMA que nous avons tenté sur les résidus différenciés à l'ordre 7*24 n'a pas abouti à cause du nombre de paramètre dans le modèle.
+
+Nous avons eu l'idée de considérer la saisonnalité hebdommadaire sans prendre en compte la saisonnalité journalière. Pour cela, on a créé vingt-quatre modèles SARIMA soit un par heure de la journée. Cependant, la variance du modèle que nous avons obtenu est beaucoup trop grande, notre modèle n'est pas utilisable. Le modèle par heure est trop sensible aux valeurs extrêmes (présentes en grand nombre dans nos données). Avec plus de temps, nous aurions pû corriger de façon efficace ces valeurs extrêmes et ainsi faire un modèle de prévision prenant également en compte les erreurs présentes dans les résidus.
+
+
+## 4. Prédiction sur l'année 2008
+
+Nous allons maintenant appliquer notre modèle de prévision sur toutes les données de l'année 2008. Voici l'équation de notre modèle :
+
+```{r}
+eq
+```
+
+
+```{r, echo=FALSE}
+
+setwd("/Volumes/CAMILLE/Projet")
+newdata <- read.table("data_elec1.txt", header=T, sep='\t')
+nw      <- length(newdata[,1])
+
+###Conversion de la premiere colonne en type "date":
+Date = as.POSIXct(strptime(newdata$date,"%Y-%m-%d %H:%M:%S"))
+newdata$date <- Date
+rm(Date)
+
+reg       <- gam(eq, data=data)
+predict   <- predict(reg, newdata)
+
+#summary(reg)
+
+R              <- summary(reg)$r.sq                  
+fit.er         <- rmse(data$Zone2 - reg$fitted)      
+forecast.er    <- rmse(newdata$Zone2 - predict)      
+fit.map        <- mape(data$Zone2, reg$fitted )      
+forecast.map   <- mape(newdata$Zone2, predict)       
+
+
+#Fittage:
+# plot(data$date, data$Zone2, type='l')
+# lines(data$date, reg$fitted.values, col='red')
+
+#prédiction:
+plot(newdata$date, newdata$Zone2, type='l', main="Données relles de 2008 par rapport au modèle de prévision",
+     xlab='', ylab='consommation')
+lines(newdata$date, predict, col='red')
+legend("bottomleft", c("consommation relle", "modèle"), lty=c(1,1), col=c("black", "red"))
+```
+
+On constate que nous sous-estimons la tendance de l'année 2008, nos prévisions sont décalées vers le bas. Notre indice R2 est similaire à celui de nos test et est à 82%. Notre erreur de prédiction passe à 8.7% ici contre 7.3% lors des tests. 
+
+Regardons la qualité de nos prévisions à horizon une semaine:
+
+```{r, echo=FALSE}
+predict   <- predict(reg, newdata[1:(7*24),])
+
+#summary(reg)
+
+R              <- summary(reg)$r.sq                  
+fit.er         <- rmse(data$Zone2 - reg$fitted)      
+forecast.er    <- rmse(newdata[1:(7*24),]$Zone2 - predict)      
+fit.map        <- mape(data$Zone2, reg$fitted )      
+forecast.map   <- mape(newdata[1:(7*24),]$Zone2, predict)       
+
+
+#prédiction:
+plot(newdata[1:(7*24),]$date, newdata[1:(7*24),]$Zone2, type='l', main="Données relles de 2008 par rapport au modèle de prévision",
+     xlab='', ylab='consommation')
+lines(newdata[1:(7*24),]$date, predict, col='red')
+legend("topright", c("consommation relle", "modèle"), lty=c(1,1), col=c("black", "red"))
+```
+
+On remarque un écart important du 2 au 4 janvier, même si notre erreur de prévision n'est que de 8.27%.
+
+## Conclusion
+
+Notre modèle nous permet d'avoir une bonne idée du profil de la consommation de la zone 2 au cours du temps. Cependant, nos prédictions ne sont pas assez précise pour être utilisées au jour le jour. De plus, nous n'avons pas anticipé la hausse de la tendance sur les six premiers mois de 2008.
+
+Si nous avions eu plus de temps, nous aurions essayé une autre méthode de prédiction itérative, avec par exemple un pas de temps de l'ordre du jour ou de la semaine. Nous aurions alors complété notre modèle avec l'information donnée par les résidus, puis nous aurions continué nos prévisions de manière itérative tout en le complétant au fur et à mesure. Construire ce modèle nous aurez permis de déduire au fur et à mesure l'augmentation de la tendance sur l'année 2008, et donc d'avoir une meilleure prévision.
+
+L'étude de ces résidus aurait été beaucoup plus facile, car dans un laps de temps plus court, la fonction arima n'aura pas le souis du trop grand nombre de données. De plus, la variance de la consommation aurait été beaucoup plus petite, les prévision des modèles SARIMA aurait été de bien meilleurs qualite.
+
+De plus, nous n'avons pas pris le temps de compléter les données manquantes dans notre table d'apprentissage. Cela nous aurait permis d'avoir un modèle sans doute plus cohérent. Pour finir, il aurait été interessant d'utiliser des méthodes de bootstrap pour quantifier les erreurs successives de notre modèle.
+
+

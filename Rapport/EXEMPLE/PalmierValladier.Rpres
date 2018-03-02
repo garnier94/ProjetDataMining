@@ -1,0 +1,461 @@
+Prediction de la consommation electrique
+========================================================
+author: Camille Palmier & Arnaud Valladier
+date: 16 mars 2017
+autosize: true
+font-family: 'Helvetica'
+
+## Sommaire :
+
+- Statistiques Descriptives
+- Modeles de prediction 
+- Conclusion et ouvertures
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Nos donnees de consommation et tendance
+========================================================
+
+```{r echo=FALSE,fig.align="center", fig_width=7, fig_height=6, fig_caption=TRUE}
+rm(list=objects())
+graphics.off()
+setwd("J:/Projet")
+#setwd("/Volumes/CAMILLE/Projet")
+#setwd("~/Fac/M1/ProjetR - annee2")
+library("magrittr")
+library("timeDate")
+library("mgcv")
+library("xts")
+###Creation du data file:
+data<-read.table("data_elec0.txt", header=T, sep='\t')
+n = length(data[,1])
+
+###Conversion de la premiere colonne en type "date":
+Date = as.POSIXct(strptime(data$date,"%Y-%m-%d %H:%M:%S"))
+data$date <- Date
+rm(Date)
+```
+```{r, echo=FALSE, fig.align="center", fig_width=7, fig_height=6, fig_caption=TRUE}
+sd    = sd(data$Zone2)
+mean  = mean(data$Zone2)
+
+zone2.xts<-xts(data$Zone2, order.by = data$date)
+hour <- as.factor(.indexhour(zone2.xts))
+day  <- as.factor(.indexday(zone2.xts))
+week <- as.factor(.indexweek(zone2.xts))
+month<- as.factor(.indexmon(zone2.xts))
+
+conso_horaire<-tapply(zone2.xts, hour, mean)
+conso_journ<-tapply(zone2.xts, day, mean)
+conso_hebdo<-tapply(zone2.xts, week, mean)
+conso_mensuelle<-tapply(zone2.xts, month, mean)
+
+nw = length(conso_hebdo)
+h  = 52     
+noyau <- ksmooth(1:nw, conso_hebdo, kernel=c("normal"), bandwidth=h)  
+reg <- lm(noyau$y~noyau$x)
+
+plot(data$date,data$Zone2, type='l', xlab="", ylab="", main="Consommation electrique de la zone 2")
+lines(data$date, reg$coeff[1] + reg$coeff[2]/(7*24)*data$Time, col='red', type='l', lwd=2)
+abline(h=reg$coefficients[1], lty=2, col=7)
+legend('topleft', c("ordonnee a l'origine", 'tendance'), 
+       col=c('orange', 'red'), lty=c(2,1))
+
+rm(noyau, reg, h, nw)
+```
+
+Saisonnalites
+========================================================
+
+```{r, echo=FALSE, fig.show='hold', fig_width=7, fig_height=6, fig_caption=TRUE}
+acf(data$Zone2, lag.max = 10*24, main="Autocorrelogramme de la Zone 2")
+abline(v=24, col='red', lty=2)
+abline(v=7*24, col='red', lty=2)
+
+pacf(data$Zone2, lag.max=10*24, main="Autocorrelogramme partiel")
+```
+
+Annees
+========================================================
+```{r, echo=FALSE,fig.align="center", fig_width=7, fig_height=6, fig_caption=TRUE}
+annee1 <- data[1:8784,]
+annee2 <- data[8785:16872,]
+annee3 <- data[16873:24961,]
+annee4 <- data[24962:n,]
+  
+Annee1.M<-tapply(annee1$Zone2, as.factor(format(annee1$date, "%m")), mean)
+Annee2.M<-tapply(annee2$Zone2, as.factor(format(annee2$date, "%m")), mean)
+Annee3.M<-tapply(annee3$Zone2, as.factor(format(annee3$date, "%m")), mean)
+Annee4.M<-tapply(annee4$Zone2, as.factor(format(annee4$date, "%m")), mean)
+plot(1:12, Annee1.M, type='b', lwd=2, ylim=c(140000, 250000), main='Consommation moyenne par mois et par annee', 
+     xlab='mois', ylab='consommation')
+lines(1:12, Annee2.M, col=2, type='b', lwd=2)
+lines(1:12, Annee3.M, col=3, type='b', lwd=2)
+lines(1:12, Annee4.M, col=4,type='b', lwd=2)
+legend("topright", c("Annee 1", "Annee 2", "Annee 3", "Annee 4"), col = c("black", 2, 3, 4), lty = c(1,1,1,1))
+```
+
+Consommation par mois
+========================================================
+```{r, echo=FALSE,fig.show='hold', fig_width=7, fig_height=6, fig_caption=TRUE}
+boxplot(data$Zone2 ~ data$Month,col="lightblue",pch=20,cex=0.5, main="Consommation par mois de la zone 2", xlab="Mois")
+boxplot(data$Station9 ~ data$Month, col="darkred", pch=20, cex=0.5, main="Dispersion des temperatures en fonction des mois")
+```
+
+Consommation par heure 
+========================================================
+```{r results='hide', echo=FALSE, fig.align="center", fig_width=7, fig_height=6, fig_caption=TRUE}
+boxplot(data$Zone2 ~ data$Hour,col="lightblue",pch=20,cex=0.5, main="Consommation par heure de la zone 2", xlab="Hour")
+```
+
+Consommation selon le type de jour
+========================================================
+```{r, echo=FALSE,fig.show='hold', fig_width=7, fig_height=6, fig_caption=TRUE}
+mean  = mean(data$Zone2)
+consoJSpe <- tapply(data$Zone2, data$daytype, mean)
+plot(1:24, 100*sort(consoJSpe)/mean, main='Consommation par type de jour en pourcentage \n par rapport a la moyenne',
+     type='b', xlab='', ylab='consommation', xaxt="n")
+axis(1, at=seq(1, 24, by=1), labels = FALSE)
+text(seq(1, 24, by=1), par("usr")[3] - 3, labels = names(sort(consoJSpe)), srt = 45, pos = 2, xpd = TRUE, cex=0.7)
+sepx <- c(0.5, 4.5, 13.5, 18.5, 24.5)
+sepy <- c(75, 85, 100, 107, 122)
+rect(sepx[1], sepy[1], sepx[2], sepy[2], border='orange')
+rect(sepx[2], sepy[2], sepx[3], sepy[3], border='green')
+rect(sepx[3], sepy[3], sepx[4], sepy[4], border='blue')
+rect(sepx[4], sepy[4], sepx[5], sepy[5], border='red')
+abline(h=100, lty=2, col='red')
+
+#Consomation la plus basse: Memorial Day:
+dataN   <- subset(data, daytype == 'USMemorialDay', selec = c(date, Zone2))
+N.xts   <- xts(dataN$Zone2, order.by = dataN$date)
+hourN   <- as.factor(.indexhour(N.xts))
+meanMD  <- tapply(N.xts, hourN, mean)
+
+#Consomation de plus basse variance: le nouvel an:
+dataN   <- subset(data, daytype == 'USNewYearsDay', selec = c(date, Zone2))
+N.xts   <- xts(dataN$Zone2, order.by = dataN$date)
+hourN   <- as.factor(.indexhour(N.xts))
+meanNY  <- tapply(N.xts, hourN, mean)
+
+#Consommation jours normaux du lundi au vendredi:
+dataN   <- subset(data, daytype == 'lundi'|daytype =='mardi'|daytype =='mercredi'
+                  |daytype =='jeudi'|daytype =='vendredi',selec = c(date, Zone2)) 
+N.xts   <- xts(dataN$Zone2, order.by = dataN$date)
+hourN   <- as.factor(.indexhour(N.xts))
+meanWD  <- tapply(N.xts, hourN, mean)
+
+#Consommation du WE:
+dataN   <- subset(data, daytype == 'samedi' | daytype == 'dimanche', selec = c(date, Zone2))
+N.xts   <- xts(dataN$Zone2, order.by = dataN$date)
+hourN   <- as.factor(.indexhour(N.xts))
+meanWE  <- tapply(N.xts, hourN, mean)
+
+#Consommation la pus haute: president Day
+dataN   <- subset(data, daytype == c('USPresidentsDay'), selec = c(date, Zone2))
+N.xts   <- xts(dataN$Zone2, order.by = dataN$date)
+hourN   <- as.factor(.indexhour(N.xts))
+meanPD  <- tapply(N.xts, hourN, mean)
+plot(dataN$date[1:24], meanMD, type='l', main="Profil horaire suivant differents types de jours", xlab='heures', 
+     ylab='conso', col='orange', ylim=c(100000,240000))
+lines(dataN$date[1:24], meanWD, col='blue')
+lines(dataN$date[1:24], meanWE, col='green')
+lines(dataN$date[1:24], meanPD, col='red')
+lines(dataN$date[1:24], meanNY, col='purple')
+legend('bottomright', c('Memorial Day', 'Nouvel An', 'Week ends', 'en semaine', 'Presidents Day'), lty = c(1,1,1,1,1), 
+       col=c('orange', 'purple', 'green', 'blue', 'red'), cex=0.8)
+rm(sepx, sepy, dataN, N.xts, hourN, meanWE, meanWD, meanPD, meanMD, meanNY)
+```
+
+Consommation et temperatures
+========================================================
+```{r, echo=FALSE,fig.align="center", fig_width=7, fig_height=6, fig_caption=TRUE}
+NStation     <- 11
+eq   <- as.formula("Zone2 ~ Time + s(Station9,k=10, bs='cr')")
+reg  <- gam(eq, data=data)
+pred <- predict(reg, type="response") 
+ 
+plot(data$Station9, data$Zone2, pch=20, main="Profil de la consommation en fonction des temperatures",xlab="temperature en F", ylab="consommation")
+ 
+points(data$Station9,pred, col='red')
+```
+
+
+Modele de prediction - choix des stations
+========================================================
+```{r results='hide', echo=FALSE}
+
+sep <- which(data$date == '2007-01-01 00:00:00')
+
+data0a <- data[1:sep,]        #donnees d'apprentissage
+data0b <- data[-c(1:sep),]    #donnees de test 
+
+
+rmse<-function (eps)
+{
+  return(round(sqrt(mean(eps^2,na.rm=TRUE)),digits=0))
+}
+
+mape<-function (y,ychap)
+{
+  return(round(100*mean(abs(y-ychap)/abs(y)),digits=2))
+}
+
+fit.error <- function(data=reg.station){
+  lapply(data, function(x){rmse(data0a$Zone2 - x$fitted)})%>%unlist
+}
+
+fit.mape <- function(data=reg.station){
+  lapply(data, function(x){mape(data0a$Zone2, x$fitted )})%>%unlist
+}
+
+forecast.mape <- function(data = reg.forecast){
+  lapply(data, function(x){mape(data0b$Zone2, x)})%>%unlist
+}
+
+forecast.error <- function(data=reg.forecast){
+  lapply(data, function(x){rmse(data0b$Zone2 - x)})%>%unlist
+}
+
+adj.rsquare<-function(data = reg.station){
+  lapply(data,function(x){summary(x)$adj.r.squared})%>%unlist
+}
+
+NStation   <- 11
+ColStation <- c(29:39)
+
+```
+
+```{r, echo=FALSE}
+sep <- which(data$date == '2007-01-01 00:00:00')
+data0a <- data[1:sep,]        
+data0b <- data[-c(1:sep),]    
+```
+
+```{r,echo=FALSE}
+Station      <- matrix(nrow = NStation, ncol = NStation)
+reg.station  <-list()
+reg.forecast <-list()
+eq           <-list()
+
+
+for (i in c(1:NStation)){
+  for(j in c(1:NStation)){
+      Station[i,j] <- paste("s(Station",i,",k=10, bs='cr')+s(Station",j,",k=10, bs='cr')",
+                            sep = "")
+  }
+}
+
+
+R.squ           = matrix(ncol=NStation, nrow=NStation)
+fit.err         = R.squ
+forecast.err    = R.squ
+fit.map         = R.squ
+forecast.map    = R.squ
+```
+
+```{r}
+for(i in c(1:NStation)){
+  for(j in c(1:i)){
+    eq                   <- as.formula(paste("Zone2~Time+",Station[j,i],sep=""))
+    reg.station          <- gam(eq, data=data0a)
+    reg.forecast         <- predict(reg.station, data0b)
+    R.squ[i,j]           <- summary(reg.station)$r.sq
+    fit.err[i,j]         <- rmse(data0a$Zone2 - reg.station$fitted)
+    forecast.err[i,j]    <- rmse(data0b$Zone2 - reg.forecast)
+    fit.map[i,j]         <- mape(data0a$Zone2, reg.station$fitted )
+    forecast.map[i,j]    <- mape(data0b$Zone2, reg.forecast)
+  }
+}
+```
+
+Modele de prediction - choix des stations
+========================================================
+
+```{r, echo=FALSE,fig.align="center", fig_width=7, fig_height=6, fig_caption=TRUE}
+
+plot(1:(11*11),forecast.map, main="Pourcentage d'erreur de prevision par couple de station", ylab="Pourcentage d'erreur", xlab="", axes=F)
+leg <- rep('', 121)
+leg[55] <- "(5,11)" 
+#axis(1,c(1:(NStation^2)), labels=leg, las=2)
+axis(1,c(1,55,121),c("","(5,11)",""))
+axis(2)
+points(x=which.min(forecast.map), y=min(forecast.map, na.rm = T), col="red", pch=3, lwd=3)
+text(x=which.min(forecast.map), y=min(forecast.map, na.rm = T), col="red", min(forecast.map, na.rm = T), pos=2)
+
+formule.gam.double <- "s(Station5, k=10, bs='cr')+s(Station11, k=10, bs='cr')"
+```
+```{r, include=FALSE}
+rm(eq, fit.map, fit.err, forecast.map, forecast.err, reg.forecast, reg.station, Station, R.squ, leg)
+```
+
+Modele de prediction - gam
+========================================================
+
+```{r}
+eq <- as.formula(paste("Zone2~Time + s(Hour, by=daytype) + s(Toy,bs='cc')+",formule.gam.double, sep=""))
+reg       <- gam(eq, data=data0a)
+predict   <- predict(reg, data0b)
+
+R              <- summary(reg)$r.sq                  #0.82  
+fit.map        <- mape(data0a$Zone2, reg$fitted )    #6.94
+forecast.map   <- mape(data0b$Zone2, predict)        #7.35  
+```
+
+Modele de prediction - gam
+========================================================
+
+```{r, echo=FALSE,fig.show='hold', fig_width=7, fig_height=6, fig_caption=TRUE}
+reg       <- gam(eq, data=data0a)
+predict   <- predict(reg, data0b)
+
+R              <- summary(reg)$r.sq                  #0.82  la c'est mieux!!   0.816 sans la 9
+fit.er         <- rmse(data0a$Zone2 - reg$fitted)    #14293
+forecast.er    <- rmse(data0b$Zone2 - predict)       #16361
+fit.map        <- mape(data0a$Zone2, reg$fitted )    #6.94
+forecast.map   <- mape(data0b$Zone2, predict)        #7.35  
+
+#Fittage:
+plot(data0a$date, data0a$Zone2, type='l', main="Fittage des donnees d'apprentissage", xlab="", ylab="consommation")
+lines(data0a$date, reg$fitted.values, col='red')
+
+#prediction:
+plot(data0b$date, data0b$Zone2, type='l', main="Fittage des donnees de test", xlab="", ylab="consommation")
+lines(data0b$date, predict, col='red')
+```
+
+Residus du modele gam
+========================================================
+```{r, echo=FALSE,fig.show='hold', fig_width=7, fig_height=6, fig_caption=TRUE}
+
+reg          <- gam(eq, data=data0a)
+predict      <- predict(reg, data0b)
+
+data$residus <- data$Zone2 - c(reg$fit, predict)
+
+data0a <- data[1:sep,]
+data0b <- data[-c(1:sep),]
+
+plot(data0b$date, data0b$residus, type='l', main="Residus de test", xlab="", ylab="")
+test <- diff(diff(data0b$residus,lag=7*24))
+plot(1:length(test), test, type='l', main="Residus differenties", xlab="", ylab="")
+sep2        <- length(data0b[,1])/2
+res.detude  <- data0b$residus[1:sep2]
+```
+
+Etude des Residus - Modele SARIMA
+========================================================
+```{r, echo=FALSE}
+sep2        <- length(data0b[,1])/2
+res.detude  <- data0b$residus[1:sep2]
+res.h       <- subset(data0b, Hour == 1, select = 41)
+test        <- rep(x = 0, length(res.h[,1]))
+res.h       <- data.frame(res.h, rep(test, 23))
+res.h       <- data.frame(res.h, test, test, test, test, test, test, test, test, test, test, test,
+                     test, test, test, test, test, test, test, test, test, test, test, test)
+
+for(i in 2:24){
+  res.h[,i]  <- subset(data0b, Hour == i, select = 41)
+}
+names(res.h)  <- 1:24
+ 
+d=1
+D=0
+ 
+#POUR 15h:
+#acf(diff(diff(res.h$'15', lag=7)), lag.max = 7*10)
+q=2
+Q=4
+ 
+#pacf(diff(res.h$'15', lag=7), lag.max = 7*10)
+p=1
+P=4
+ 
+#summary(model.h[[1]])
+#summary(model.h[[1]]$residuals)
+model.h  <- list()
+```
+ 
+```{r}
+for(i in 1:24){
+  model.h[[i]] <- arima(res.h[,i], order = c(1,2,2), seasonal = list(order=c(4,0,4), period=7), method='CSS')}
+```
+Etude des Residus - Modele SARIMA
+========================================================
+```{r, echo=FALSE}
+predict(model.h[[1]],n.ahead=7)
+```
+
+Previsions sur l'annee 2008
+========================================================
+```{r,echo=FALSE}
+Zone2 ~ Time + s(Hour, by = daytype) + s(Toy, bs = "cc") + s(Station5,k = 10, bs = "cr") + s(Station11, k = 10, bs = "cr")
+```
+
+
+```{r, echo=FALSE,fig.align="center", fig_width=7, fig_height=6, fig_caption=TRUE}
+newdata <- read.table("data_elec1.txt", header=T, sep='\t')
+nw      <- length(newdata[,1])
+
+###Conversion de la premiere colonne en type "date":
+Date = as.POSIXct(strptime(newdata$date,"%Y-%m-%d %H:%M:%S"))
+newdata$date <- Date
+rm(Date)
+
+reg       <- gam(eq, data=data)
+predict   <- predict(reg, newdata)
+
+#summary(reg)
+
+R              <- summary(reg)$r.sq                  
+fit.er         <- rmse(data$Zone2 - reg$fitted)      
+forecast.er    <- rmse(newdata$Zone2 - predict)      
+fit.map        <- mape(data$Zone2, reg$fitted )      
+forecast.map   <- mape(newdata$Zone2, predict)       
+
+
+#Fittage:
+# plot(data$date, data$Zone2, type='l')
+# lines(data$date, reg$fitted.values, col='red')
+
+#prediction:
+plot(newdata$date, newdata$Zone2, type='l', main="Donnees relles de 2008 par rapport au modele de prevision",
+     xlab='', ylab='consommation')
+lines(newdata$date, predict, col='red')
+legend("bottomleft", c("consommation relle", "modele"), lty=c(1,1), col=c("black", "red"))
+```
+
+Previsions sur l'annee 2008
+========================================================
+```{r, echo=FALSE,fig.align="center", fig_width=7, fig_height=6, fig_caption=TRUE}
+predict   <- predict(reg, newdata[1:(7*24),])
+
+#summary(reg)
+
+R              <- summary(reg)$r.sq                  
+fit.er         <- rmse(data$Zone2 - reg$fitted)      
+forecast.er    <- rmse(newdata[1:(7*24),]$Zone2 - predict)      
+fit.map        <- mape(data$Zone2, reg$fitted )      
+forecast.map   <- mape(newdata[1:(7*24),]$Zone2, predict)       
+
+
+#prediction:
+plot(newdata[1:(7*24),]$date, newdata[1:(7*24),]$Zone2, type='l', main="Donnees relles de 2008 par rapport au modele de prevision",
+     xlab='', ylab='consommation')
+lines(newdata[1:(7*24),]$date, predict, col='red')
+legend("topright", c("consommation relle", "modele"), lty=c(1,1), col=c("black", "red"))
+```
+
+Conclusion et ouvertures
+========================================================
+
+- Script de prevision recursif
+- Valeurs manquantes
+- Methode de bootstrap pour quantifier l'erreur (intervalle de confiance)
+- Integrer des variables explicatives (luminosite, l'humidite)
+
+
+
+
+
