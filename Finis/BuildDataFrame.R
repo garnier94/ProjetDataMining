@@ -9,8 +9,6 @@ library(lubridate)
 
 setwd("~/StatML/Projet/ProjetDataMining")
 
-
-
 #Importation des données géographiques 
 illinoisCR <- readOGR(path.expand("~/StatML/Projet/ProjetDataMining/Map/Congres"),"tl_2016_17_sldl")
 #illinoisCR <- readOGR(path.expand("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/Map/Congres"),"tl_2016_17_sldl")  
@@ -58,3 +56,12 @@ Data <- aggregateData(Trips2016,2016)
 BuildDataSet(2016, Data, illinoisCR, Stations, save_data = TRUE)
 
 #2017
+Stations <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q3Q4/Divvy_Stations_2017_Q3Q4.csv")
+Trips2017_1 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q1.csv")
+Trips2017_2 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q2.csv")
+Trips2017_3 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q3Q4/Divvy_Trips_2017_Q3.csv")
+Trips2017_4 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q3Q4/Divvy_Trips_2017_Q4.csv")
+Trips2017<- rbind(Trips2017_1,Trips2017_2, Trips2017_3, Trips2017_4)
+rm(Trips2017_1,Trips2017_2, Trips2017_3,Trips2017_4)
+Data <- aggregateData(Trips2017,2017)
+BuildDataSet(2017, Data, illinoisCR, Stations, save_data = TRUE)
