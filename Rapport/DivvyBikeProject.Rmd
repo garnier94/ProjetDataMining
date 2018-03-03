@@ -162,7 +162,7 @@ Le profil des week-ed est différent, on observe plus le même rythme au niveau 
 
 Le choix de la station 9 a une influence sur les semaines. En effet, dans les districts du centre de Chicago, on peut voir que le nombre d'entrée et le nombre de sortie est quasiment similaire au cours de la journée. Cela est surement dû au fait que les personnes au coeur de la ville se déplacent entre ces grands districts et que les personnes vivant un peu plus loin du centre viennent le matin travailler.
 
-Pour comprendre le contraste entre les districts de banlieu et les distrits du centre, le graphique suivant montre la même semaine de juillet 2014 mais pour le district 4.
+Pour comprendre le contraste entre les districts de banlieue et les distrits du centre, le graphique suivant montre la même semaine de juillet 2014 mais pour le district 4.
 
 ![](Banlieu.png)
 
@@ -178,7 +178,11 @@ Le premier pic est localisé dans les environs de 7h du matin et le second vers 
 
 # IV - Les modèles 
 
-### Tendance / Saisonalité
+On utillisera comme critère de perfomance le critère RMSE (écart-type moyen). Pour nbE_stat , la moyenne des performances est de 0.40, et l'écart type standard est de 0.96 . Ces chiffres nous permettent de constater les perfomances des différents modèles que nous allons présenter. 
+
+### Tendance / Saisonnalité
+
+**Serie = Tendance * Saisonnalité Annuelle * (Saisonnalité Quotidienne + écart ) **
 
 Par construction, la variable **diff** au cours du temps est centré en zéro. Il n'y a pas de tendance, comme le montre le graphique ci-dessous. 
 
@@ -207,7 +211,31 @@ lm0$coefficients
 
 Les coefficients de la droite sont bien très proches de zéro.
 
-### Modèle GAM (GAMLSS) - significativité des variables
-### Random Forests (Adaboost)
+
+
+### Modèle GAM (GAMLSS)
+
+Une autre idée est d'utiliser les modèles GAM classiques afin de prédire les différentes variables d'intérêts. On procède de la façon suivante:
+
+ * On utilise d'abord les données de 2014 et 2015 comme données d'entrainements, et on valide le choix d'hyperparamètres en utilisant les données de 2016 comme ensemble de validation 
+
+ * On utilise ensuite toutes les données de 2014 à 2016 pour prédire la variable en 2017.
+
+Nous avons effectué quelques manipulations des données supplémentaires afin de mieux prédire :
+
+ * Nous avons trié les districts par ordre de fréquentation, afin de pouvoir obtenir un comportement monotone
+
+
+### Random Forests
+
+Un modèle que nous avons utilisé est celui des random forests du package *Random Forests* .On utilise les données de 2014 à 2016 pour entrainer le modèle.  Ce modèle est assez simple à implémenter et obtient de très bon résultats. Cependant, il est un peu couteux en temps de calcul. En effet, on obtient pour la prévision de nbE_stat un RMSE  de 0.305. On peut par exemple observer l'efficacité de ce modèles sur différnes districts.
+
+
+![](RF_2.png)
+
+Les random forests nous permettent également d'étudier les influences des différentes variables
+
+
+
 
 # V - Conclusion
