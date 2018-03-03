@@ -23,7 +23,7 @@ groupByGeospatialData <- function(data, area, stations, year,  save_data = FALSE
   stations.copy$district <-as.integer( over(stations, illinoisCR)$SLDLST)
 
   #Jointure Table
-  Datat <- left_join(Data,stations.copy, by=c("station"="id"))
+  Datat <- left_join(data,stations.copy, by=c("station"="id"))
   JoinedData  <- summarise(group_by(Datat,  Time, Day, Hour, district ), nbE = sum(nbE), nbS = sum(nbS))
 
   #Nb of stations by district

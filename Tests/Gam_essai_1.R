@@ -51,13 +51,13 @@ datatrain$districtpos <- AddPos(datatrain, listdistrict)
 datatest$districtpos <- AddPos(datatest, listdistrict)
 
 
-eq <- nbEstat ~ s(Hour, k = 12)+s(districtpos) + s(dow, k= 8)+s(pluvio, k= 3) + s(temp) +s(Week)
+eq <- nbEstat ~ s(Hour, k = 12)+s(districtpos, k= 20) + s(dow, k= 8)+s(pluvio, k= 3) + s(temp) +s(Week)
 
 g0 <- gam(eq, data = datatrain)
 forecast<-predict(g0, newdata=datatest)
 
 rmse(datatest$nbEstat, forecast)
-
+#0.85
 par(mfrow=c(2,2))
 
 

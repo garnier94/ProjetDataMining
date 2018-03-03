@@ -13,15 +13,17 @@ setwd("~/StatML/Projet/ProjetDataMining")
 illinoisCR <- readOGR(path.expand("~/StatML/Projet/ProjetDataMining/Map/Congres"),"tl_2016_17_sldl")
 #illinoisCR <- readOGR(path.expand("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/Map/Congres"),"tl_2016_17_sldl")  
 
-# Importation des stations
-Stations <-  read_csv("~/StatML/DataProjet/Divvy_Stations_Trips_2014_Q3Q4/Divvy_Stations_2014-Q3Q4.csv")
-
 #2014
-load("~/StatML/Projet/ProjetDataMining/Package/AggratedData2014.RData")
+Stations <-  read_csv("~/StatML/DataProjet/Divvy_Stations_Trips_2014_Q3Q4/Divvy_Stations_2014-Q3Q4.csv")
+Trips2014_1 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2014_Q1Q2.csv")
+Trips2014_2 <- read.csv("~/StatML/DataProjet/Divvy_Stations_Trips_2014_Q3Q4/Divvy_Trips_2014-Q3-07.csv")
+Trips2014_3 <- read.csv("~/StatML/DataProjet/Divvy_Stations_Trips_2014_Q3Q4/Divvy_Trips_2014-Q3-0809.csv")
+Trips2014_4 <- read.csv("~/StatML/DataProjet/Divvy_Stations_Trips_2014_Q3Q4/Divvy_Trips_2014-Q4.csv")
 
-year = 2014
-
-dat <- BuildDataSet(year, Data, illinoisCR, Stations, save_data = TRUE)
+Trips2014 <- rbind(Trips2014_1,Trips2014_2,Trips2014_3,Trips2014_4)
+rm(Trips2014_1,Trips2014_2,Trips2014_3,Trips2014_4)
+Data <- aggregateData(Trips2014,2014)
+dat <- BuildDataSet(2014, Data, illinoisCR, Stations, save_data = TRUE)
 
 #2015
 # There is a missing stations in the file Divvy_Stations 2015. So we need to collect first information about this stations:
@@ -63,5 +65,5 @@ Trips2017_3 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q3Q4/Divvy_Trips_2
 Trips2017_4 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q3Q4/Divvy_Trips_2017_Q4.csv")
 Trips2017<- rbind(Trips2017_1,Trips2017_2, Trips2017_3, Trips2017_4)
 rm(Trips2017_1,Trips2017_2, Trips2017_3,Trips2017_4)
-Data <- aggregateData(Trips2017,2017)
-BuildDataSet(2017, Data, illinoisCR, Stations, save_data = TRUE)
+DataPP <- aggregateData(Trips2017,2017)
+dat <-BuildDataSet(2017, DataPP, illinoisCR, Stations, save_data = TRUE)

@@ -14,15 +14,15 @@ getMeteo <- function(year, save_data = TRUE){
 
   ## Gestion des dates
 
-  minDate = as.POSIXct(strptime( paste(year, "01-01 00:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
-  maxDate = as.POSIXct(strptime( paste(year+1, "01-01 01:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
-  listDate = seq(minDate, maxDate, by = "hour")
-  dftime = data.frame(Time = listDate)
+  minDate <- as.POSIXct(strptime( paste(year, "01-01 00:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
+  maxDate <- as.POSIXct(strptime( paste(year+1, "01-01 01:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
+  listDate <- seq(minDate, maxDate, by = "hour")
+  dftime <- data.frame(Time = listDate)
 
   #Importation et selection des paramètre utiles pour la météo
 
   Meteo <- riem_measures(station = "MDW", date_start = minDate, date_end = round_date(maxDate , unit='day'))
-  Meteo$Time <- round_date( Meteo$valid ,unit ='hour')
+  Meteo$Time <- round_date(Meteo$valid-6*3600, unit ="hour")
   Meteo$tmpf <- fahrenheit.to.celsius(Meteo$tmpf) # A enlever pour les américains
   MeteoData <- summarise(group_by(Meteo, Time),temp = mean(tmpf, na.rm = TRUE), pluvio = mean(p01i, na.rm = TRUE))
 
@@ -39,7 +39,7 @@ getMeteo <- function(year, save_data = TRUE){
   MeteoData <- left_join(MeteoData,MeanMonth, by= c( "Hour" ="Hour", "Month" ="Month"))
   MeteoData$temp[is.na(MeteoData$temp)] <- MeteoData$tempmean[is.na(MeteoData$temp)]
 
-
+  MeteoData$Time <- with_tz(MeteoData$Time, tz = "Europe/Paris")
   MeteoData <- MeteoData[,- (4:6)]
 
   if (save_data == TRUE){
