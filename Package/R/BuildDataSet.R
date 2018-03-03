@@ -33,7 +33,7 @@ BuildDataSet <- function(year, raw_data, districts, Stations, save_data = FALSE)
   ListDays <- getSpecialDays(year, save_data = FALSE)
 
   dis <- summarise(group_by(Joined, district))
-  minDate <- as.POSIXct(strptime( paste(year, "01-01 00:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
+  minDate <- as.POSIXct(strptime( paste(year, "01-01 01:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
   maxDate <- as.POSIXct(strptime( paste(year+1, "01-01 01:00", sep = "-"), "%Y-%m-%d %H:%M"  ) )
   listDate <- seq(minDate, maxDate, by = "hour")
 
