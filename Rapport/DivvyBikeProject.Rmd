@@ -85,7 +85,7 @@ Les stations vélos ont d'abord été réparti au centre de la ville avant de s'
 
 ### Autres représentations
 
-![](Fréqu.png)
+![](Frequ.png)
 
 Si on regarde la fréquentation des stations en 2016, on remarque que les vélos les plus utilisés sont ceux du centre ville. Par ailleurs, il y a un fort écart entre les stations les moins utilisées (moins de 200 vélos empruntés par an) et les stations les plus utilisées (jusqu'à 92 000 vélos empruntés).
 
@@ -128,11 +128,11 @@ L'ensembles des manipulations décrites dans les trois derniers paragraphes ont 
 Voici un extrait de nos données finales :
 ```{r warning=FALSE, echo=FALSE}
 load("~/StatML/Projet/ProjetDataMining/FullData2015.RData")
-head(Data, 5)
+Data[55:60,]
 ```
 
 
-### Définition de notre série d'intérêt
+### Définition de nos séries d'intérêt
 
 Nous avons proposé $3$ série d'interet différentes par région:
 
@@ -144,24 +144,70 @@ Nous avons proposé $3$ série d'interet différentes par région:
  
 Nous estimons que cette dernière statistique est la plus utile, car elle peut servir à l'entreprise pour determiner comment elle doit déplacer les vélos entre les différentes régions afin de s'assurer que les stations ne soient jamais complètement vides ou complètement pleines. 
 
+
 ![](Diffplot.png)
+
 
 Ce premier graphique permet de visualisation la variable représentant la différence entre le nombre de vélos entrant et le nombre de vélos sortant. La forme générale est la même : les vélos sont moins empruntés en début d'année (période hivernale - janvier/février). C'est en été que la différence entrant/sortant est la plus importante. 
 
-Pour bien comprendre la forme de la série, intéressons nous à ces trois séries sur une période de temps restreinte : soit la deuxième semaine du mois de *juillet 2014*.
+Pour bien comprendre la forme de la série, intéressons nous à des séries *nbEstat* et *nbSstat* sur une période de temps restreinte et sur une seule station (la station 9) : soit la deuxième semaine du mois de *juillet 2014*.
 
+Pour réaliser ces graphiques, nous avons utilisé le district 9 qui se trouve en plein centre ville. C'est également le district qui comporte le plus de stations.
 
+![](Juillet.png)
 
+On voit en semaine deux grands pics : un premier le matin et un second en fin d'après-midi (voir graphique suivant). Ces pics correspondent aux trajets pour aller et pour revenir du travail. Certaines personnes utilisent également les vélos lors de la pause déjeuner d'où un troisième pic entre les deux plus grands.
 
+Le profil des week-ed est différent, on observe plus le même rythme au niveau du matin et du soir : les vélos sont plutôt utilisés pour se promener dans la ville. 
+
+Le choix de la station 9 a une influence sur les semaines. En effet, dans les districts du centre de Chicago, on peut voir que le nombre d'entrée et le nombre de sortie est quasiment similaire au cours de la journée. Cela est surement dû au fait que les personnes au coeur de la ville se déplacent entre ces grands districts et que les personnes vivant un peu plus loin du centre viennent le matin travailler.
+
+Pour comprendre le contraste entre les districts de banlieu et les distrits du centre, le graphique suivant montre la même semaine de juillet 2014 mais pour le district 4.
+
+![](Banlieu.png)
+
+On peut voir que les personnes partent au travail le matin et rentrent le soir. Les interactions avec les autres districts sont plus faibles.
+
+Pour finir avec les visualisations, voici le profil d'une journée de semaine type :
+
+![](07_juillet.png)
+
+Le premier pic est localisé dans les environs de 7h du matin et le second vers 17h. 
 
 ### Quelques visualisations 
 
 # IV - Les modèles 
 
 ### Tendance / Saisonalité
+
+Par construction, la variable **diff** au cours du temps est centré en zéro. Il n'y a pas de tendance, comme le montre le graphique ci-dessous. 
+
+![](Tendance.png)
+
+Pour tracer ce graphique, nous avons utilisé le modèle linéaire suivant :
+
+```{r echo=FALSE}
+load("~/StatML/Projet/ProjetDataMining/FullData2014.RData")
+data_2014 <- Data
+load("~/StatML/Projet/ProjetDataMining/FullData2015.RData")
+data_2015 <- Data
+load("~/StatML/Projet/ProjetDataMining/FullData2016.RData")
+data_2016 <- Data
+load("~/StatML/Projet/ProjetDataMining/FullData2017.RData")
+data_2017 <- Data
+rm(Data)
+data_all <- rbind(data_2014,data_2015,data_2016,data_2017)
+rm(data_2014,data_2015,data_2016, data_2017)
+```
+
+```{r echo=TRUE}
+lm0 <- lm(diff~Time, data=data_all)
+lm0$coefficients
+```
+
+Les coefficients de la droite sont bien très proches de zéro.
+
 ### Modèle GAM (GAMLSS) - significativité des variables
 ### Random Forests (Adaboost)
-### Modèles auto-régressifs
-### Agrégation  
 
 # V - Conclusion
