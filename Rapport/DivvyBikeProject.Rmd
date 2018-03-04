@@ -202,6 +202,19 @@ On corrige nos séries de leurs tendances. En affichant la tendance, (en rouge) 
 
 ### Saisonnalité
 
+On voit qu'il y a deux saisonnalités dans nos séries : une saisonnalité annuelle et journalière.
+
+Dans les graphiques suivant, la courbe rouge représente la saisonnalité annuelle.
+
+![](Saisonnalité_nbE.png)
+
+![](Saisonnalité_nbS.png)
+
+En enlevant la saisonnalité annuelle, on obtient :
+
+![](Noseason_nbE.png)
+
+![](Noseason_nbS.png)
 
 ### Modèle GAM (GAMLSS)
 
