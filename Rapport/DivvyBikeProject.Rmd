@@ -193,8 +193,12 @@ Pour chercher la tendance, nous avons utilisé un modèle linéaire (fonction *l
 
 Que ce soit pour la variable **nbEstat** ou pour la variable **nbSstat** la tendance est croissante. On a vu précédemment qu'au fur et à mesure du temps, le nombre de vélos entrant ou sortant augmente.
 
-On corrige nos séries de leurs tendances. Le modèle n'étant pas additif, nous n'avons pas retranché la tendance mais divisé par le coefficient directeur de la droite.
+On corrige nos séries de leurs tendances. En affichant la tendance, (en rouge) on peut vérifier que la tendance de la nouvelle série est constante. 
 
+
+![](nbEstat_detrend.png)
+
+![](nbSstat_detrend.png)
 
 ### Saisonnalité
 
