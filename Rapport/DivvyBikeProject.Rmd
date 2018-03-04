@@ -267,9 +267,17 @@ Les random forests nous permettent également d'étudier les influences des diff
   Sans les différentes annés    0.322
   Sans la pluviométrie          0.305
    
-Table:  Significativité des variables du modèle.
+Table:  RMSE pour différents modèles
 
-Il semble donc que la plupart des variables soient prises en compte, mais pas la pluviométrie. 
+Il semble donc que la plupart des variables soient significatives, mais pas la pluviométrie. La encore, on peut tester la différence entre modèles locaux et globaux. 
 
+ District     Global         Local      
+----------  ----------    ----------    
+    2         0.10           0.08             
+    9         0.53           0.34            
+   12         0.73           0.52           
+   14         0.14           0.13  
+   
+Table: RMSE pour différents districts pour les modèles locaux et globaux
 
 # V - Conclusion
