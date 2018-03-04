@@ -1,9 +1,4 @@
-
-
-Tendance/saisonnalité:
-
-sans district + enlever 2017
-faire sur nbEstat et sur nbSstat
+Saisonnalité:
 
 saisonnalité annuelle 24*365.2 --> je l'enlève 
 saisonnalité journalier 24 --> mais que sur un jour (mercredi)

@@ -174,43 +174,29 @@ Pour finir avec les visualisations, voici le profil d'une journée de semaine ty
 
 Le premier pic est localisé dans les environs de 7h du matin et le second vers 17h. 
 
-### Quelques visualisations 
-
 # IV - Les modèles 
 
-On utillisera comme critère de perfomance le critère RMSE (écart-type moyen). Pour nbE_stat , la moyenne des performances est de 0.40, et l'écart type standard est de 0.96 . Ces chiffres nous permettent de constater les perfomances des différents modèles que nous allons présenter. 
+On utilisera comme critère de perfomance le critère RMSE (écart-type moyen). Pour nbE_stat , la moyenne des performances est de 0.40, et l'écart type standard est de 0.96 . Ces chiffres nous permettent de constater les perfomances des différents modèles que nous allons présenter. 
 
-### Tendance / Saisonnalité
+### Tendance 
 
-**Serie = Tendance * Saisonnalité Annuelle * (Saisonnalité Quotidienne + écart ) **
 
-Par construction, la variable **diff** au cours du temps est centré en zéro. Il n'y a pas de tendance, comme le montre le graphique ci-dessous. 
+**Série = Tendance * Saisonnalité Annuelle * (Saisonnalité Quotidienne + écart ) **
 
-![](Tendance.png)
+La série **diff** n'a pas de tendance par construction (centrée en zéro). Nous allons donc étudier les séries **nbEstat** et **nbSstat**. On met de côté l'agrégation par district également.
 
-Pour tracer ce graphique, nous avons utilisé le modèle linéaire suivant :
+Pour chercher la tendance, nous avons utilisé un modèle linéaire (fonction *lm*). La tendance est représentée par une droite rouge sur les deux graphiques suivants.
 
-```{r echo=FALSE}
-load("~/StatML/Projet/ProjetDataMining/FullData2014.RData")
-data_2014 <- Data
-load("~/StatML/Projet/ProjetDataMining/FullData2015.RData")
-data_2015 <- Data
-load("~/StatML/Projet/ProjetDataMining/FullData2016.RData")
-data_2016 <- Data
-load("~/StatML/Projet/ProjetDataMining/FullData2017.RData")
-data_2017 <- Data
-rm(Data)
-data_all <- rbind(data_2014,data_2015,data_2016,data_2017)
-rm(data_2014,data_2015,data_2016, data_2017)
-```
+![](Tendance_nbE.png)
 
-```{r echo=TRUE}
-lm0 <- lm(diff~Time, data=data_all)
-lm0$coefficients
-```
+![](Tendance_nbS.png)
 
-Les coefficients de la droite sont bien très proches de zéro.
+Que ce soit pour la variable **nbEstat** ou pour la variable **nbSstat** la tendance est croissante. On a vu précédemment qu'au fur et à mesure du temps, le nombre de vélos entrant ou sortant augmente.
 
+On corrige nos séries de leurs tendances. Le modèle n'étant pas additif, nous n'avons pas retranché la tendance mais divisé par le coefficient directeur de la droite.
+
+
+### Saisonnalité
 
 
 ### Modèle GAM (GAMLSS)
