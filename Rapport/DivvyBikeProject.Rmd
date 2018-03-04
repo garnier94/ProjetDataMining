@@ -203,25 +203,37 @@ On corrige nos séries de leurs tendances. Le modèle n'étant pas additif, nous
 
 Une autre idée est d'utiliser les modèles GAM classiques afin de prédire les différentes variables d'intérêts. On procède de la façon suivante:
 
- * On utilise d'abord les données de 2014 et 2015 comme données d'entrainements, et on valide le choix d'hyperparamètres en utilisant les données de 2016 comme ensemble de validation 
+ * On utilise d'abord les données de 2014 et 2015 comme données d'entrainementOns, et on valide le choix d'hyperparamètres en utilisant les données de 2016 comme ensemble de validation 
 
  * On utilise ensuite toutes les données de 2014 à 2016 pour prédire la variable en 2017.
 
 Nous avons effectué quelques manipulations des données supplémentaires afin de mieux prédire :
 
  * Nous avons trié les districts par ordre de fréquentation, afin de pouvoir obtenir un comportement monotone
+ 
+ * Par ailleurs, nous avons identifié les périodes les plus actives ( de 7 à 8h et de 16 à 18h en semaine  ) par une variable spéciale.
 
 
 ### Random Forests
 
-Un modèle que nous avons utilisé est celui des random forests du package *Random Forests* .On utilise les données de 2014 à 2016 pour entrainer le modèle.  Ce modèle est assez simple à implémenter et obtient de très bon résultats. Cependant, il est un peu couteux en temps de calcul. En effet, on obtient pour la prévision de nbE_stat un RMSE  de 0.305. On peut par exemple observer l'efficacité de ce modèles sur différnes districts.
-
+Un modèle que nous avons utilisé est celui des random forests du package *Random Forests* .On utilise les données de 2014 à 2016 pour entrainer le modèle.  Ce modèle est assez simple à implémenter et obtient de très bon résultats. Cependant, il est un peu couteux en temps de calcul. En effet, on obtient pour la prévision de nbE_stat un RMSE  de 0.305 en utilisant 10 arbres différents. On peut observer l'efficacité de ce modèles sur différnes districts. Il semble que l'efficacité de la prévision soit très dépendante des districts considérés
 
 ![](RF_2.png)
 
-Les random forests nous permettent également d'étudier les influences des différentes variables
+Les random forests nous permettent également d'étudier les influences des différentes variables. On peut ainsi supprimer certaines variables, et essayer de voir quelle est l'erreur sans ces variables.
 
+  Modèle                         RMSE   
+ ---------------------------   ------------       
+  Complet                       0.305                    
+  Sans Données géographiques    0.850                    
+  Sans la température           0.487            
+  Sans le type de jours         0.405
+  Sans les différentes annés    0.322
+  Sans la pluviométrie          0.305
+   
+Table:  Nombre de trajets et stations par année.
 
+Il semble donc que la plupart des variables soient prises en compte, mais pas la pluviométrie. 
 
 
 # V - Conclusion
