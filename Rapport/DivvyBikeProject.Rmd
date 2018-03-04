@@ -216,7 +216,7 @@ En enlevant la saisonnalité annuelle, on obtient :
 
 ![](Noseason_nbS.png)
 
-### Modèle GAM (GAMLSS)
+### Modèle GAM 
 
 #### Un premier modèle :
 
