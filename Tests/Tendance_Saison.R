@@ -221,10 +221,10 @@ plot(adjR_E,type='b',pch=20,xlab='K',ylab='adjusted R-squared')
 plot(adjR_S,type='b',pch=20,xlab='K',ylab='adjusted R-squared')
 
 plot(data_all_nbE_3$nbEstat_noseason, type='l', ylab="nbEstat_noseason" ,main="Saisonnalité journalière nbEstat")
-lines(lm.fourier_E[[2]]$fitted, col='red')
+lines(lm.fourier_E[[5]]$fitted, col='red')
 
 plot(data_all_nbS_3$nbSstat_noseason, type='l',ylab="nbSstat_noseason" ,main="Saisonnalité journalière nbSstat")
-lines(lm.fourier_S[[2]]$fitted, col='red')
+lines(lm.fourier_S[[5]]$fitted, col='red')
 
 data_all_nbE_3$nbEstat_end<- data_all_nbE_3$nbEstat_noseason / lm.fourier_E[[2]]$fitted
 data_all_nbS_3$nbSstat_end <- data_all_nbS_3$nbSstat_noseason / lm.fourier_S[[2]]$fitted
@@ -232,6 +232,16 @@ data_all_nbS_3$nbSstat_end <- data_all_nbS_3$nbSstat_noseason / lm.fourier_S[[2]
 plot(data_all_nbE_3$nbEstat_end, type = 'l', ylab="nbEstat_end", main="Variable nbEstat sans saisonnalité journalière")
 plot(data_all_nbS_3$nbSstat_end, type = 'l', ylab="nbSstat_end", main="Variable nbSstat sans saisonnalité journalière")
 
+new_data <- data_2017[,5]
+new_lm <- lm.fourier_E[[2]]
+lm.forecast<-predict(new_lm,newdata=new_data)
+
+rmse<-function(eps)
+{
+  return(round(sqrt(mean(eps^2,na.rm=TRUE)),digits=0))
+}
+
+rmse(new_data$nbE-lm.forecast)
 
 # Graphiques cool
 #################
