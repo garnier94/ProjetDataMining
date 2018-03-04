@@ -218,6 +218,8 @@ En enlevant la saisonnalité annuelle, on obtient :
 
 ### Modèle GAM (GAMLSS)
 
+#### Un premier modèle :
+
 Une autre idée est d'utiliser les modèles GAM classiques afin de prédire les différentes variables d'intérêts. On procède de la façon suivante:
 
  * On utilise d'abord les données de 2014 et 2015 comme données d'entrainementOns, et on valide le choix d'hyperparamètres en utilisant les données de 2016 comme ensemble de validation 
@@ -230,10 +232,27 @@ Nous avons effectué quelques manipulations des données supplémentaires afin d
  
  * Par ailleurs, nous avons identifié les périodes les plus actives ( de 7 à 8h et de 16 à 18h en semaine  ) par une variable spéciale.
 
+Le modèle obtenu n'est pas très efficace, et on obtient un RMSE de 0.744.
+
+#### Un second modèle :
+
+En utilisant les mêmes hyper-paramètre que precedemment, on peut essayer de n'utiliser comme données d'entrainements que les données concernant un district donné pour prédire sur ce district. On appelle ce modèle modèle local, en opposition au modèle précédent, global. Le plus souvent, les modèles locaux sont plus efficaces pour prédire que le modèle global, mais ce n'est pas toujours le cas. Le tableau et le graphique suivant montrent différents comportements typiques (sur le graphique, les prédicitions sont en noir).  
+
+ District     Global         Local      
+----------  ----------    ----------    
+    2         0.39           0.13             
+    9         1.00           0.79            
+   12         1.92           1.18           
+   14         0.31           0.34   
+
+Table: RMSE pour différents districts pour les modèles locaux et globaux
+
+![](GAM_par_dis.png)
+
 
 ### Random Forests
 
-Un modèle que nous avons utilisé est celui des random forests du package *Random Forests* .On utilise les données de 2014 à 2016 pour entrainer le modèle.  Ce modèle est assez simple à implémenter et obtient de très bon résultats. Cependant, il est un peu couteux en temps de calcul. En effet, on obtient pour la prévision de nbE_stat un RMSE  de 0.305 en utilisant 10 arbres différents. On peut observer l'efficacité de ce modèles sur différnes districts. Il semble que l'efficacité de la prévision soit très dépendante des districts considérés
+Un modèle que nous avons utilisé est celui des random forests du package *Random Forests* .On utilise les données de 2014 à 2016 pour entrainer le modèle.  Ce modèle est assez simple à implémenter et obtient de très bon résultats. Cependant, il est un peu couteux en temps de calcul. En effet, on obtient pour la prévision de nbE_stat un RMSE  de 0.305 en utilisant 10 arbres différents. On peut observer l'efficacité de ce modèles sur différnes districts. Il semble que l'efficacité de la prévision soit très dépendante des districts considérés.
 
 ![](RF_2.png)
 
@@ -248,7 +267,7 @@ Les random forests nous permettent également d'étudier les influences des diff
   Sans les différentes annés    0.322
   Sans la pluviométrie          0.305
    
-Table:  Nombre de trajets et stations par année.
+Table:  Significativité des variables du modèle.
 
 Il semble donc que la plupart des variables soient prises en compte, mais pas la pluviométrie. 
 
