@@ -280,4 +280,6 @@ Il semble donc que la plupart des variables soient significatives, mais pas la p
    
 Table: RMSE pour différents districts pour les modèles locaux et globaux
 
+Les modèles locaux sont encore plus efficaces que le modèles global.
+
 # V - Conclusion
