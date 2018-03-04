@@ -47,132 +47,171 @@ data_all_nbS <- summarise(group_by(data_all, Time, dow, Day,Hour,pluvio, temp), 
 # Modèle linéaire pour la recherche de la tendance
 ##################################################
 
-## Sur nbEstat et nbSstat
-lm0 <- lm(nbEstat~Time, data=data_all_nbE)
-#summary(lm0)
-plot(data_all_nbE$Time, data_all_nbE$nbEstat, type='l', xlab="Time", ylab = "Diff",main="Tendance de la variable nbEstat 2014-2017")
-lines(data_all_nbE$Time, lm0$fitted, col='red')
-#lm0$coefficients
-#rm(lm0)
+## Sur nbEstat
+lm_E <- lm(nbEstat~Time, data=data_all_nbE)
+lm_S <- lm(nbSstat~Time, data=data_all_nbS)
 
-## Sur nbEstat et nbSstat
-lm1 <- lm(nbSstat~Time, data=data_all_nbS)
+plot(data_all_nbE$Time, data_all_nbE$nbEstat, type='l', xlab="Time", ylab = "Diff",main="Tendance de la variable nbEstat 2014-2017")
+lines(data_all_nbE$Time, lm_E$fitted, col='red')
+
 plot(data_all_nbS$Time, data_all_nbS$nbSstat, type='l', xlab="Time", ylab = "Diff",main="Tendance de la variable nbSstat 2014-2017")
-lines(data_all_nbS$Time, lm1$fitted, col='red')
-#rm(lm1)
+lines(data_all_nbS$Time, lm_S$fitted, col='red')
+
+#rm(lm_S,lm_E)
 
 ## Variables sans tendance
-data_all_nbE$nbEstat_detrend <- data_all_nbE$nbEstat/lm0$fitted
-data_all_nbS$nbSstat_detrend <- data_all_nbS$nbSstat/lm1$fitted
+data_all_nbE$nbEstat_detrend <- data_all_nbE$nbEstat/lm_E$fitted
+data_all_nbS$nbSstat_detrend <- data_all_nbS$nbSstat/lm_S$fitted
 
 plot(data_all_nbE$Time, data_all_nbE$nbEstat_detrend, type='l',main="Série nbEstat sans sa tendance")
 plot(data_all_nbS$Time, data_all_nbS$nbSstat_detrend, type='l',main="Série nbSstat sans sa tendance")
 
 lm0_test <- lm(nbEstat_detrend~Time, data=data_all_nbE)
-plot(data_all_nbE$Time, data_all_nbE$nbEstat_detrend, type='l',main="Série nbEstat sans sa tendance")
+plot(data_all_nbE$Time, data_all_nbE$nbEstat_detrend, type='l',ylab="nbEstat_detrend",main="Série nbEstat sans sa tendance")
 lines(data_all_nbE$Time, lm0_test$fitted, col='red')
 
 lm1_test <- lm(nbSstat_detrend~Time, data=data_all_nbS)
-plot(data_all_nbS$Time, data_all_nbS$nbSstat_detrend, type='l',main="Série nbEstat sans sa tendance")
+plot(data_all_nbS$Time, data_all_nbS$nbSstat_detrend, type='l',ylab="nbSstat_detrend",main="Série nbSstat sans sa tendance")
 lines(data_all_nbS$Time, lm1_test$fitted, col='red')
 
 
-# Saisonnalité du district 9 
-############################
+# Saisonnalité 
+##############
 
-#data_9 <- data_all[which(data_all$district==9),] #district 9 = plus gros district 
-#data_9 <- summarise(group_by(data_all, Time, dow, Day,Hour,pluvio, temp), nb_Estat =sum(nbE))
-data_9 <- data_all_nbE
+data_all_nbE$id <- as.numeric(as.character(rownames(data_all_nbE))) 
+data_all_nbS$id <- as.numeric(as.character(rownames(data_all_nbS))) 
 
-data_9$id <- as.numeric(as.character(rownames(data_9))) 
+attach(data_all_nbE)
+data_all_nbE <-  data_all_nbE[order(Time),]
+detach(data_all_nbE)
 
-attach(data_9)
-data_9 <-  data_9[order(Time),]
-detach(data_9)
+attach(data_all_nbS)
+data_all_nbS <-  data_all_nbS[order(Time),]
+detach(data_all_nbS)
 
 ## Création de la base de Fourier
-w <- 2*pi/(24*365.2) #saisonnalité journalière
+# Saisonnalité annuelle = 24*365.2
+# Saisonnalité journalière = 24
+w <- 2*pi/(24*365.2) 
 Nfourier <- 15
 for(i in c(1:Nfourier))
 {
-  assign(paste("cos", i, sep=""),cos(w*data_9$id*i))
-  assign(paste("sin", i, sep=""),sin(w*data_9$id*i))
+  assign(paste("cos", i, sep=""),cos(w*data_all_nbE$id*i))
+  assign(paste("sin", i, sep=""),sin(w*data_all_nbE$id*i))
 }
-
-#plot(cos1,type='l')
-
-#rm(cos1, cos2, cos3, cos4, cos10, cos11, cos12, cos13, cos14, cos15, cos16, cos17, cos18, cos19)
-#rm(cos20, cos5, cos6, cos7, cos8, cos9)
-#rm(sin1, sin2, sin3, sin4, sin5, sin6, sin7, sin8, sin9, sin10, sin11, sin12, sin13, sin14)
-#rm(sin15, sin16, sin17, sin18, sin19, sin20)
-
-#rm(i, Nfourier, w)
-
 
 ## Insertion de la base de fourier dans la data.frame
 cos<-paste('cos',c(1:Nfourier),sep="",collapse=",")                         
 sin<-paste('sin',c(1:Nfourier),sep="",collapse=",")
-paste("data.frame(data_9,",cos,",",sin,")",sep="")
+paste("data.frame(data_all_nbE,",cos,",",sin,")",sep="")
+paste("data.frame(data_all_nbS,",cos,",",sin,")",sep="")
 
-data_9 <- eval(parse(text=paste("data.frame(data_9,",cos,",",sin,")",sep="")))
-names(data_9)
+data_all_nbE <- eval(parse(text=paste("data.frame(data_all_nbE,",cos,",",sin,")",sep="")))
+data_all_nbS <- eval(parse(text=paste("data.frame(data_all_nbS,",cos,",",sin,")",sep="")))
 
 
-lm.fourier<-list()
-eq<-list()
+lm.fourier_E<-list()
+lm.fourier_S<-list()
+eq_E<-list()
+eq_S<-list()
 for(i in c(1:Nfourier))
 {
   cos<-paste(c('cos'),c(1:i),sep="")
   sin<-paste(c('sin'),c(1:i),sep="")
   fourier<-paste(c(cos,sin),collapse="+")
-  eq[[i]]<-as.formula(paste("data_9$nbEstat_detrend~",fourier,sep=""))
-  lm.fourier[[i]]<-lm(eq[[i]],data=data_9)
+  eq_E[[i]]<-as.formula(paste("data_all_nbE$nbEstat_detrend~",fourier,sep=""))
+  eq_S[[i]]<-as.formula(paste("data_all_nbS$nbSstat_detrend~",fourier,sep=""))
+  lm.fourier_E[[i]]<-lm(eq_E[[i]],data=data_all_nbE)
+  lm.fourier_S[[i]]<-lm(eq_S[[i]],data=data_all_nbS)
 }
 
-length(lm.fourier)
+adjR<-function(x){summary(x)$adj.r.squared}
 
-adjR<-function(x)
+unlist(lapply(lm.fourier_E,adjR))
+unlist(lapply(lm.fourier_S,adjR))
+
+adjR_E<-unlist(lapply(lm.fourier_E,function(x){summary(x)$adj.r.squared}))
+adjR_S<-unlist(lapply(lm.fourier_S,function(x){summary(x)$adj.r.squared}))
+
+plot(adjR_E,type='b',pch=20,xlab='K',ylab='adjusted R-squared')
+plot(adjR_S,type='b',pch=20,xlab='K',ylab='adjusted R-squared')
+
+plot(data_all_nbE$nbEstat_detrend, type='l', ylab="nbEstat_detrend" ,main="Saisonnalité annuelle nbEstat")
+lines(lm.fourier_E[[8]]$fitted, col='red')
+
+plot(data_all_nbS$nbSstat_detrend, type='l',ylab="nbSstat_detrend" ,main="Saisonnalité annuelle nbSstat")
+lines(lm.fourier_S[[8]]$fitted, col='red')
+
+data_all_nbE$nbEstat_noseason <- data_all_nbE$nbEstat_detrend / lm.fourier_E[[8]]$fitted
+data_all_nbS$nbSstat_noseason <- data_all_nbS$nbSstat_detrend / lm.fourier_S[[8]]$fitted
+
+plot(data_all_nbE$nbEstat_noseason, type = 'l', ylab="nbEstat_noseason", main="Variable nbEstat sans saisonnalité annuelle")
+plot(data_all_nbS$nbSstat_noseason, type = 'l', ylab="nbSstat_noseason", main="Variable nbSstat sans saisonnalité annuelle")
+
+rm(cos1,cos2,cos3,cos4,cos5,cos6,cos7,cos8,cos9,cos10,cos11,cos12,cos13,cos14,cos15)
+rm(sin1,sin2,sin3,sin4,sin5,sin6,sin7,sin8,sin9,sin10,sin11,sin12,sin13,sin14,sin15)
+
+data_all_nbE <- data_all_nbE[,-c(10:39)]
+data_all_nbS <- data_all_nbS[,-c(10:39)]
+
+rm(w,Nfourier,i,cos,sin,lm0_test,lm1_test,fourier)
+
+## Deuxième saisonnalité
+w <- (2*pi)/24 
+Nfourier <- 15
+for(i in c(1:Nfourier))
 {
-  summary(x)$adj.r.squared
+  assign(paste("cos", i, sep=""),cos(w*data_all_nbE$id*i))
+  assign(paste("sin", i, sep=""),sin(w*data_all_nbE$id*i))
 }
 
-unlist(lapply(lm.fourier,adjR))
+## Insertion de la base de fourier dans la data.frame
+cos<-paste('cos',c(1:Nfourier),sep="",collapse=",")                         
+sin<-paste('sin',c(1:Nfourier),sep="",collapse=",")
+paste("data.frame(data_all_nbE,",cos,",",sin,")",sep="")
+paste("data.frame(data_all_nbS,",cos,",",sin,")",sep="")
 
-adjR<-unlist(lapply(lm.fourier,function(x){summary(x)$adj.r.squared}))
-
-plot(adjR,type='b',pch=20,xlab='K',ylab='adjusted R-squared')
-points(8,adjR[8],col='red',pch=20,cex=2)
-
-plot(data_9$nbEstat_detrend, type='l')
-lines(lm.fourier[[8]]$fitted, col='red')
-
-
-data_9$nbEstat_desaison <- data_9$nbEstat_detrend / lm.fourier[[8]]$fitted
-plot(data_9$nbEstat_desaison, type = 'l')
-plot(data_9$nbEstat_desaison[], type = 'l')
-
-a <- ymd("2015-01-07")
-b <- ymd("2015-01-14")
-sel <- which(data_9$Time >= a & data_9$Time <= b)
-o <- order(data_9$Time[sel])
-
-# Zoom sur une semaine pour le rapport
-plot(data_9$Time[sel[o]], data_9$nbEstat_desaison[sel[o]], type='l', xlab="", 
-     ylab = "", main="NbEstat et NbSstat du 07-07-2014 au 13-07-2014")
-lines(data_9_14$Time[sel[o]], data_9_14$nbSstat[sel[o]], col='red')
-legend(x="topright",legend=c("nbEstat","nbSstat"),text.col=c("black","red"),pch=c(16,15),col=c("black","red"))
+data_all_nbE <- eval(parse(text=paste("data.frame(data_all_nbE,",cos,",",sin,")",sep="")))
+data_all_nbS <- eval(parse(text=paste("data.frame(data_all_nbS,",cos,",",sin,")",sep="")))
 
 
+lm.fourier_E<-list()
+lm.fourier_S<-list()
+eq_E<-list()
+eq_S<-list()
+for(i in c(1:Nfourier))
+{
+  cos<-paste(c('cos'),c(1:i),sep="")
+  sin<-paste(c('sin'),c(1:i),sep="")
+  fourier<-paste(c(cos,sin),collapse="+")
+  eq_E[[i]]<-as.formula(paste("data_all_nbE$nbEstat_noseason~",fourier,sep=""))
+  eq_S[[i]]<-as.formula(paste("data_all_nbS$nbSstat_noseason~",fourier,sep=""))
+  lm.fourier_E[[i]]<-lm(eq_E[[i]],data=data_all_nbE)
+  lm.fourier_S[[i]]<-lm(eq_S[[i]],data=data_all_nbS)
+}
 
+adjR<-function(x){summary(x)$adj.r.squared}
 
-plot(data_9$diff_detrend[1:52],type='l')
-lines(lm.fourier[[12]]$fitted[1:52],col='red')
+unlist(lapply(lm.fourier_E,adjR))
+unlist(lapply(lm.fourier_S,adjR))
 
+adjR_E<-unlist(lapply(lm.fourier_E,function(x){summary(x)$adj.r.squared}))
+adjR_S<-unlist(lapply(lm.fourier_S,function(x){summary(x)$adj.r.squared}))
 
+plot(adjR_E,type='b',pch=20,xlab='K',ylab='adjusted R-squared')
+plot(adjR_S,type='b',pch=20,xlab='K',ylab='adjusted R-squared')
 
+plot(data_all_nbE$nbEstat_noseason, type='l', ylab="nbEstat_noseason" ,main="Saisonnalité annuelle nbEstat")
+lines(lm.fourier_E[[3]]$fitted, col='red')
 
+plot(data_all_nbS$nbSstat_noseason, type='l',ylab="nbSstat_noseason" ,main="Saisonnalité annuelle nbSstat")
+lines(lm.fourier_S[[8]]$fitted, col='red')
 
+data_all_nbE$nbEstat_end<- data_all_nbE$nbEstat_noseason / lm.fourier_E[[3]]$fitted
+data_all_nbS$nbSstat_end <- data_all_nbS$nbSstat_noseason / lm.fourier_S[[3]]$fitted
 
+plot(data_all_nbE$nbEstat_end, type = 'l', ylab="nbEstat_end", main="Variable nbEstat sans saisonnalité journalière")
+plot(data_all_nbS$nbSstat_end, type = 'l', ylab="nbSstat_end", main="Variable nbSstat sans saisonnalité journalière")
 
 
 # Graphiques cool
