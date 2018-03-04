@@ -156,23 +156,42 @@ data_all_nbS <- data_all_nbS[,-c(10:39)]
 
 rm(w,Nfourier,i,cos,sin,lm0_test,lm1_test,fourier)
 
-## Deuxième saisonnalité
+
+## VISUALISATION
+a <- ymd("2014-07-07")
+b <- ymd("2014-07-14")
+sel <- which(data_all_nbE$Time >= a & data_all_nbE$Time <= b)
+o <- order(data_all_nbE$Time[sel])
+
+# Zoom sur un jour
+plot(data_all_nbE$Time[sel[o]], data_all_nbE$nbEstat_detrend[sel[o]], type='l', xlab="", 
+     ylab = "", main="")
+
+
+## Deuxième saisonnalité sur un jour
+
+data_all_nbE_3 <- data_all_nbE[which(data_all_nbE$dow==3),]
+data_all_nbE_3$id <- as.numeric(as.character(rownames(data_all_nbE_3))) 
+
+data_all_nbS_3 <- data_all_nbS[which(data_all_nbS$dow==3),]
+data_all_nbS_3$id <- as.numeric(as.character(rownames(data_all_nbS_3))) 
+
 w <- (2*pi)/24 
 Nfourier <- 15
 for(i in c(1:Nfourier))
 {
-  assign(paste("cos", i, sep=""),cos(w*data_all_nbE$id*i))
-  assign(paste("sin", i, sep=""),sin(w*data_all_nbE$id*i))
+  assign(paste("cos", i, sep=""),cos(w*data_all_nbE_3$id*i))
+  assign(paste("sin", i, sep=""),sin(w*data_all_nbE_3$id*i))
 }
 
 ## Insertion de la base de fourier dans la data.frame
 cos<-paste('cos',c(1:Nfourier),sep="",collapse=",")                         
 sin<-paste('sin',c(1:Nfourier),sep="",collapse=",")
-paste("data.frame(data_all_nbE,",cos,",",sin,")",sep="")
-paste("data.frame(data_all_nbS,",cos,",",sin,")",sep="")
+paste("data.frame(data_all_nbE_3,",cos,",",sin,")",sep="")
+paste("data.frame(data_all_nbS_3,",cos,",",sin,")",sep="")
 
-data_all_nbE <- eval(parse(text=paste("data.frame(data_all_nbE,",cos,",",sin,")",sep="")))
-data_all_nbS <- eval(parse(text=paste("data.frame(data_all_nbS,",cos,",",sin,")",sep="")))
+data_all_nbE_3 <- eval(parse(text=paste("data.frame(data_all_nbE_3,",cos,",",sin,")",sep="")))
+data_all_nbS_3 <- eval(parse(text=paste("data.frame(data_all_nbS_3,",cos,",",sin,")",sep="")))
 
 
 lm.fourier_E<-list()
@@ -184,10 +203,10 @@ for(i in c(1:Nfourier))
   cos<-paste(c('cos'),c(1:i),sep="")
   sin<-paste(c('sin'),c(1:i),sep="")
   fourier<-paste(c(cos,sin),collapse="+")
-  eq_E[[i]]<-as.formula(paste("data_all_nbE$nbEstat_noseason~",fourier,sep=""))
-  eq_S[[i]]<-as.formula(paste("data_all_nbS$nbSstat_noseason~",fourier,sep=""))
-  lm.fourier_E[[i]]<-lm(eq_E[[i]],data=data_all_nbE)
-  lm.fourier_S[[i]]<-lm(eq_S[[i]],data=data_all_nbS)
+  eq_E[[i]]<-as.formula(paste("data_all_nbE_3$nbEstat_noseason~",fourier,sep=""))
+  eq_S[[i]]<-as.formula(paste("data_all_nbS_3$nbSstat_noseason~",fourier,sep=""))
+  lm.fourier_E[[i]]<-lm(eq_E[[i]],data=data_all_nbE_3)
+  lm.fourier_S[[i]]<-lm(eq_S[[i]],data=data_all_nbS_3)
 }
 
 adjR<-function(x){summary(x)$adj.r.squared}
@@ -201,17 +220,17 @@ adjR_S<-unlist(lapply(lm.fourier_S,function(x){summary(x)$adj.r.squared}))
 plot(adjR_E,type='b',pch=20,xlab='K',ylab='adjusted R-squared')
 plot(adjR_S,type='b',pch=20,xlab='K',ylab='adjusted R-squared')
 
-plot(data_all_nbE$nbEstat_noseason, type='l', ylab="nbEstat_noseason" ,main="Saisonnalité annuelle nbEstat")
-lines(lm.fourier_E[[3]]$fitted, col='red')
+plot(data_all_nbE_3$nbEstat_noseason, type='l', ylab="nbEstat_noseason" ,main="Saisonnalité journalière nbEstat")
+lines(lm.fourier_E[[2]]$fitted, col='red')
 
-plot(data_all_nbS$nbSstat_noseason, type='l',ylab="nbSstat_noseason" ,main="Saisonnalité annuelle nbSstat")
-lines(lm.fourier_S[[8]]$fitted, col='red')
+plot(data_all_nbS_3$nbSstat_noseason, type='l',ylab="nbSstat_noseason" ,main="Saisonnalité journalière nbSstat")
+lines(lm.fourier_S[[2]]$fitted, col='red')
 
-data_all_nbE$nbEstat_end<- data_all_nbE$nbEstat_noseason / lm.fourier_E[[3]]$fitted
-data_all_nbS$nbSstat_end <- data_all_nbS$nbSstat_noseason / lm.fourier_S[[3]]$fitted
+data_all_nbE_3$nbEstat_end<- data_all_nbE_3$nbEstat_noseason / lm.fourier_E[[2]]$fitted
+data_all_nbS_3$nbSstat_end <- data_all_nbS_3$nbSstat_noseason / lm.fourier_S[[2]]$fitted
 
-plot(data_all_nbE$nbEstat_end, type = 'l', ylab="nbEstat_end", main="Variable nbEstat sans saisonnalité journalière")
-plot(data_all_nbS$nbSstat_end, type = 'l', ylab="nbSstat_end", main="Variable nbSstat sans saisonnalité journalière")
+plot(data_all_nbE_3$nbEstat_end, type = 'l', ylab="nbEstat_end", main="Variable nbEstat sans saisonnalité journalière")
+plot(data_all_nbS_3$nbSstat_end, type = 'l', ylab="nbSstat_end", main="Variable nbSstat sans saisonnalité journalière")
 
 
 # Graphiques cool
