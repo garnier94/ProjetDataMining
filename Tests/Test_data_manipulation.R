@@ -15,7 +15,9 @@ library(dplyr)
 
 # Chargement des deux fichiers de données qui nous intéresse pour le moment 
 
-load("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/FullData2014.RData")
+#load("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/FullData2014.RData")
+load("~/StatML/Projet/ProjetDataMining/FullData2015.RData")
+
 data_2014 <- Data
 
 load("~/Documents/Orsay/M2/Semestre 1/Data Mining/ProjetDataMining/FullData2015.RData")

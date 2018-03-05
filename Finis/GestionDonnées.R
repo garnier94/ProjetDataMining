@@ -52,7 +52,9 @@ rm( Trips2016_1, Trips2016_2, Trips2016_3, Trips2016_4, Trips2016_5, Trips2016_6
 #2017
 Trips2017_1 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q1.csv")
 Trips2017_2 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q2.csv")
-Trips2017<- rbind(Trips2017_1,Trips2017_2)
+Trips2017_3 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q3Q4/Divvy_Trips_2017_Q3.csv")
+Trips2017_4 <- read.csv("~/StatML/DataProjet/Divvy_Trips_2017_Q3Q4/Divvy_Trips_2017_Q4.csv")
+Trips2017<- rbind(Trips2017_1,Trips2017_2, Trips2017_3, Trips2017_4)
 rm(Trips2017_1,Trips2017_2)
 
 #Ici on choisit l'année qu'on va transformer

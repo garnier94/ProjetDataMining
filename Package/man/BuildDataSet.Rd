@@ -26,8 +26,8 @@ Hour : The Hour of the observation
 dow : the position of the day in the week (8 for holydays)
 weekday : name of the day (or of the hollydays)
 district : the subregion considered
-nbE : number of bikes arriving in a station of the considered district during the period of 1 hour  
-nbS : number of bikes leaving in a station of the considered district during the period of 1 hour 
+nbE : number of bikes arriving in a station of the considered district during the period of 1 hour
+nbS : number of bikes leaving in a station of the considered district during the period of 1 hour
 diff : nbE - nbS
 temp : temperature
 pluvio : pluviometry

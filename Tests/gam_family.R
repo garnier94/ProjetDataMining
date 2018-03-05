@@ -1,6 +1,5 @@
 rm(list=objects())
 ###############packages
-
 library(mgcv)
 library(lubridate)
 library(DivvyBikeProject)
@@ -71,11 +70,13 @@ detach(datatest)
 
 ###===========================================================
 #Un premier GAM
-equation <- diff~s(Week,k=3)+s(Hour,k = 12) + te(Hour, temp, k=c(3, 5)) + s(district, k=10)+ s(temp)+pluvio
+equation <- diff~s(Week,k=3)+s(Hour,k = 12) + te(Hour, temp, k=c(3, 5)) + s(district, k=10)+ s(temp)
 gamexp<-gam(equation, data=datatrain) 
 gamexp$forecast <- predict(gamexp, newdata=datatest)
 rmse(gamexp$forecast, datatest$diff)
 #0.346
+
+plot(gamexp)
 
 plotperiod(datatest , gamexp$forecast , "2017-09-04", "2017-09-06" , title = "diff", couleur = 'blue', stat = 9)
 
@@ -149,11 +150,13 @@ plotperiod(datatest ,datatest$nbEstat, gamexp$forecast , "2017-09-04", "2017-09-
 #0.786 sans régularisation
 #0.765 avec regularisation des districts mais sans classement (avec pic)
 #0.751 avec classement & régularisation
+#0.746 avec les temp corrigés
 
 plot(gamexp)
 
+
 #---------------------------------------------------------
-equation <- nbEstat ~ s(Week,k=8)+s(Hour,k = 20) + te(Hour, temp, k=c(5, 5)) + s(districtpos, k=20)+ s(temp)+s(pluvio,k=3) +pic
+equation <- nbEstat ~ s(Week,k=8)+s(Hour,k = 20) + te(Hour, temp, k=c(5, 5)) + s(districtpos, k=20)+ s(temp)+s(pluvio,k=3) +s(pic, k=3)
 gamexp<-gam(equation, data=datatrain) 
 gamexp$forecast <- predict(gamexp, newdata=datatest)
 rmse(gamexp$forecast, datatest$nbEstat)
@@ -161,6 +164,8 @@ rmse(gamexp$forecast, datatest$nbEstat)
 plotperiod(datatest ,datatest$nbEstat, gamexp$forecast , "2017-09-04", "2017-09-12" , title = "diff", couleur = 'blue', stat = 9)
 #0.747 avec classement & régularisation (pos 1/0)
 #0.746 avec pas (-1:2)
+#0.744 avec les temp corrigé
+
 
 plot(gamexp)
 
@@ -190,17 +195,22 @@ plotperiod(datatest ,datatest$diff, gamexp$forecast , "2017-09-04", "2017-09-12"
 
 #-----------------------------------------
 
-form <- nbEstat ~ s(Week,k=8)+s(Hour,k = 20) + te(Hour, temp, k=c(5, 5)) + s(districtpos, k=20)+ s(temp)+s(pluvio,k=3) +pic
-formVar <- ~ s(temp,k=5)
-formSkew <- ~ s(temp, k=5)
-formKur <- ~ 1 
-shs <- gam(list(form, formVar, formSkew, formKur), data = datatrain, 
-           family = shash(a1=-3, a2=3), optimizer = c("outer", "bfgs"))
+list_district = c(2,9,14,12)
+par(mfrow=c(2,2))
+for( area in list_district)
+{
+  #data_train <- datatrain[which(datatrain$district ==area),]
+  data_test <- datatest[which(datatest$district ==area),]
+  #equation <- nbEstat ~ s(Week,k=8)+s(Hour,k = 20) + te(Hour, temp, k=c(5, 5)) + s(temp)+s(pluvio,k=3) +s(pic, k=3)
+  #gamexp<-gam(equation, data=data_train) 
+  #gamexp$forecast <- predict(gamexp, newdata=data_test)
+  print(rmse(gamexp$forecast[which(datatest$district ==area)], data_test$nbEstat))
+  plotperiod(datatest ,datatest$nbEstat, gamexp$forecast , "2017-09-04", "2017-09-12" , title = "nbE_stat", couleur = 'red', stat = area)
+}
 
-shs.forecast <- predict(shs, newdata = datatest)
-
-
-rmse(datatest$nbEstat, shs.forecast[,1])
-plot(shs.forecast[,1], type='l')
-
-
+#   Secteur only         Full data
+#===================================
+# 2 |     0.131         0.389
+# 9 |     0.792         1
+# 14 |     0.337        0.31
+# 12 |     1.18         1.92
