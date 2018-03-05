@@ -11,15 +11,16 @@ output:
 
 # I- Introduction
 
-### But et intérêts de l'étude
+Dans le cadre du cours *Data Mining*, nous avons choisi des données temporelles sur le système de partage de vélos de la ville de Chicago. Le but de ce projet est de manipuler des données en grande dimension (nous avons récupéré environ 13 millions de données) et de construire des modèles de prédiction performants. 
 
-Dans le cadre du projet, nous avons construit un package R.
+Notre rapport s'organise de la manière suivante : nous présentons dans une première partie les données brutes puis dans une seconde les données transformées. En effet, un enjeu important a été de transformer les données dans un format compatible avec nos envies de prédiction et nos modèles. Une troisième partie portera sur les modèles que nous avons utilisé pour la prédiction. Dans cette dernière partie, nous parlerons du découpage Tendance/Saisonnalité de nos séries, des modèles additifs généralisés (*gam*) et des modèles d'arbre (*Random Forest*).
+
+Dans le cadre du projet, nous avons construit un package R :
 ```{r warning=FALSE}
 library("DivvyBikeProject")
 ```
-Nous présenterons les fonctions présentes dans notre package au fur et à mesure du rapport.
 
-### Remerciements
+La fonction de ce package est de regrouper toutes les manipulations que nous avons apporté sur les données : il permet donc de passer des données brutes (directement téléchargeable sur internet, voir **II**) aux différents jeux de données utilisés dans nos modèles. Nous présenterons les fonctions présentes dans notre package au fur et à mesure des deux premières parties.
 
 # II - Présentation des données
 
@@ -29,13 +30,13 @@ Divvy est le système de partage de vélos de la ville de Chicago, avec 6 000 v�
 
 Divvy est un programme du Département des Transports de Chicago (CDOT), qui possède les vélos, les stations et les véhicules de la ville. Le financement initial du programme provenait de subventions fédérales pour des projets qui favorisent le redressement économique, réduisent la congestion du trafic et améliorent la qualité de l'air, ainsi que des fonds supplémentaires provenant du programme de financement des augmentations d'impôt de la Ville. En 2016, Divvy s'est étendu à la banlieue voisine d'Evanston grâce à une subvention de l'État de l'Illinois.
 
-Sur le site de Divvy, les [données](https://www.divvybikes.com/system-data) sur les trajets et les stations sont disponibles au public. Tous les ans, deux jeux de données sont publiés : un premier allant de janvier à juillet et un second allant de août à décembre.
+Sur le site de Divvy, les [données](https://www.divvybikes.com/system-data) sur les trajets et les stations sont disponibles au public. Tous les ans, deux jeux de données sont publiés : un premier allant de janvier à juin et un second allant de juillet à décembre.
 
 Chaque trajet à vélo est anonymisé et comprend :
 
 * Jour et heure du début du voyage
 
-* Fin du voyage jour et heure
+* Jour et heure de la fin du voyage
 
 * Station de départ
 
@@ -43,7 +44,7 @@ Chaque trajet à vélo est anonymisé et comprend :
 
 * Type d'utilisateur (membre, tour unique ou passe d'exploration)
 
-* Si un membre voyage, le sexe et l'année de naissance du membre seront inclus
+* Si un membre voyage, le sexe et l'année de naissance sont inclus
 
 Exemple de 5 trajets réalisés en 2014 :
 
@@ -52,6 +53,20 @@ setwd("~/StatML/Projet/ProjetDataMining/Rapport/")
 load("Trips_14.RData")
 trips_pres
 ```
+
+En plus des deux fichiers sur les trajets à vélo, nous pouvons récupérer tous les ans une table sur les stations. Pour chaque station, nous avons :
+
+* Identifiant
+
+* Nom 
+
+* Latitude
+
+* Longitude
+
+* Capacité (nombre de vélos que la station peut supporter)
+
+* Date de mise en service
 
 Les 5 premières lignes de la table des stations de 2014 :
 
@@ -75,31 +90,47 @@ Table:  Nombre de trajets et stations par année.
 
 Les vélos ont été mis en service en juin 2013 d'où un nombre de trajets plus faible. Ces chiffres nous montre une augmentation du nombre de trajets sur le réseau et une augmentation du réseau lieu même au cours du temps. C'est entre 2014 et 2015 que ces augmentations sont les plus importantes avec environ 30% de trajets supplémentaires et 174 nouvelles stations.
 
+L'extention du service à la banlieue d'Evanston en 2016 représente la création de quatre nouvelles bornes dans le réseau.
+
 ### Visualisation géographique
 
-Pour visualiser l'emplacement des stations à Chicago, nous les avons tracés sur un fond de carte de la ville.
+Grâce aux informations présentes dans la table *Station*, nous pouvons visualiser l'emplacement des stations vélos dans la ville de Chicago.
 
 ![](Extention.png)
 
-Les stations vélos ont d'abord été réparti au centre de la ville avant de s'étendre vers la banlieue. Le réseau en 2017 est sensiblement le même que le réseau de 2016 (seulement 4 stations de plus).
+Sur ce graphique, nous n'avons pas rajouté les stations de 2013 et de 2017 car il y a peu de changements entre 2013 et 2014 et entre 2016 et 2017.
 
-### Autres représentations
+Nous pouvons voir que les stations vélos ont dans un premier temps été réparti dans le centre puis elles vont ensuite s'étendre vers les banlieues.
+
+Nous nous sommes également rendu compte que certaines stations se déplaçaient de quelques mètres d'une année sur l'autre ou changer de noms. Ces deux observations justifient en partie l'agrégation spatiale fait par la suite.
+
+Regardons maintenant la fréquentation des stations en 2016 : 
 
 ![](Frequ.png)
 
-Si on regarde la fréquentation des stations en 2016, on remarque que les vélos les plus utilisés sont ceux du centre ville. Par ailleurs, il y a un fort écart entre les stations les moins utilisées (moins de 200 vélos empruntés par an) et les stations les plus utilisées (jusqu'à 92 000 vélos empruntés).
+Nous remarquons sur ce graphique, que les vélos les plus utilisés sont surtout ceux du centre ville. Aux vues des profils de nos trajets, il semble que le centre regroupe écoles et lieux de travail (voir profil d'une journée plus bas). 
+
+Nous pouvons voir qu'il y a un fort écart entre les stations les moins utilisées (moins de 200 vélos empruntés par an) et les stations les plus utilisées (jusqu'à 92 000 vélos empruntés par an).
 
 # III - Transformation des données
 
-Nous présenterons dans cette partie les manipulations que nous avons effectué sur les données. Cette partie est centrale puisqu'elle a nécessité beaucoup de travail et de temps.
+Nous présenterons dans cette partie les manipulations que nous avons effectué sur les données. Cette partie représente une bonne partie de notre travail, elle est donc centrale. Les trois paragraphes suivants permettent de se rendre compte d'une partie des problèmes "simples" que ous avons rencontré et qui a motivé une transformation des données. 
 
-Les données que l'on trouve sur le site de Divvy sont divisées par semestre, ou par mois selon les années. Les données n'ont pas un format homogène. Les variables changent parfois de nom et le format des données n'est pas toujours le même. On a également été confronté à un problème au niveau des stations : elles peuvent changer de noms au cours du temps ou se déplacer de quelques mètres.
+Les données que l'on trouve sur le site de Divvy ne sont pas divisées de la même façon selon les années. Par exemple, pour 2014, nous avons un fichier contenant toutes les données de janvier à juin (Q1Q2) mais pour 2016, nous avons un fichier avec Q1 (janvier à mars) puis un fichier pour avril, un autre pour juin et un dernier pour juillet. Dans notre package, nous prenons en compte les spécificités de chaque année pour homogénéiser.
 
-Notre jeu de données vit en grande dimension (plus de 13 millions de trajets et une dizaine de variables). Pour disposer de la capacité nécessaire pour faire tourner les modèles, nous avons réduit la dimension en réalisant plusieurs agrégations. 
+A l'intérieur de chaque fichier, on trouve des différences au niveau des noms des variables (exemple : '-' une année et '_' une autre).
+
+Un autre problème que l'on a rencontré se trouve au niveau des stations. Nous avons déjà remarqué plus haut que certaines changent de nom et d'autre de place au cours du temps.
+
+<p>&nbsp; </p>
+
+Nous avons réalisé plusieurs agrégations : une agrégation temporelle et une agrégation spatiale. Ces agrégations ont été motivé d'une part par les problèmes précédemment décrit et d'autre part par une volonté de réduire la dimension de notre jeu de données (13.5 millions de trajets et une dizaine de variables).
 
 ### Agrégation temporelle
 
-Nous avons compté, pour chaque station, le nombre de vélos entrant (nbE) et le nombre de vélos sortant (nbS) à chaque heure. Nous avons donc perdu l'information sur les trajets, puisque qu'on ne sait plus d'où vient chaque vélo. Par ailleurs, nous avons négligé les informations sur les utilisateurs. 
+Nous avons compté, pour chaque station, le nombre de vélos entrant (**nbE**) et le nombre de vélos sortant (**nbS**) à chaque heure. L'agrégation au pas horaire nous a paru pertinente car elle permet de garder une maille temporelle assez fine tout en réduisant la dimensionalité de manière efficace. 
+
+Ce choix d'agrégation a conditionné nos séries d'intérêt puisque nous avons perdu des informations telles que les informations sur les utilisateurs ou encore le détail précis de chaque trajet.
 
 L'agrégation temporelle (ainsi que la standardisation du format des données) se fait en utilisant la fonction **aggregateData** du package.
 
@@ -107,11 +138,11 @@ L'agrégation temporelle (ainsi que la standardisation du format des données) s
 
 Le fait que de nouvelles stations s'ouvrent constamment, ainsi que le fait qu'elles sont parfois déplacées, nous a conduit à grouper les données géographiquement. Ainsi, nous supposons que des stations spatialement proche se comportent de la même façon. 
 
-Pour gérer les données géographiques, nous nous avons utilisé les packages R *rgdal* et *raster*. Etant donné un découpage spatial de la ville de Chicago contenue dans le Large SpatialPolygonDataFrame *area*, ainsi qu'un fichier *data* regroupant les données agrégées temporellement sur les *stations*, on obtient une agrégation spatiale via la fonction **groupByGeospatialData(data, area, stations, year,  save_data = FALSE)**
+Pour gérer les données géographiques, nous avons utilisé les packages R *rgdal* et *raster*. Étant donné un découpage spatial de la ville de Chicago contenue dans le Large SpatialPolygonDataFrame *area*, ainsi qu'un fichier *data* regroupant les données agrégées temporellement sur les *stations*, nous obtenons une agrégation spatiale via la fonction **groupByGeospatialData(data, area, stations, year,  save_data = FALSE)**
    
-Pour nos tests, nous avons choisi le découpage géographique par circonscriptions législatives pour la chambre basse de l'Illinois, obtenue sur le site du [recensement](https://www.census.gov/) américain. Ce découpage n'est objectivement pas très bon, notamment à cause de la pratique du [gerrymandering](https://fr.wikipedia.org/wiki/Gerrymandering). En effet, la forme des circonscriptions est généralement tortueuse (voir carte plus haut) et regroupe des populations différentes pour des considérations électorales. Cependant, il s'agissait du seul regroupement à la bonne échelle que nous avons pu trouver. Par ailleurs, comme on le verra, ce découpage est déjà assez informatif. 
+Pour nos tests, nous avons choisi le découpage géographique par circonscriptions législatives pour la chambre basse de l'Illinois, obtenue sur le site du [recensement](https://www.census.gov/) américain. Ce découpage n'est objectivement pas très bon, notamment à cause de la pratique du [gerrymandering](https://fr.wikipedia.org/wiki/Gerrymandering). En effet, la forme des circonscriptions est généralement tortueuse (voir carte plus haut) et regroupe des populations différentes pour des considérations électorales. Cependant, il s'agit du seul regroupement à la bonne échelle que nous avons pu trouver. Par ailleurs, comme on le verra, ce découpage est déjà informatif. 
 
-On peut ainsi regrouper les stations dans une vingtaine de regions géographiques différentes qui comportent chacune en moyenne 24 stations (avec un écart type de 18).
+On peut ainsi regrouper les stations dans une vingtaine de régions géographiques différentes qui comportent chacune en moyenne 24 stations (avec un écart type de 18).
 
 ### Ajouts de variables explicatives
 
@@ -119,9 +150,9 @@ Nous avons rajouté $3$ variables explicatives à notre jeu de données :
 
 * La pluviométrie (*pluvio*) et la température (*temp*) grâce au package *riem*.
 
-* La variable "Day of Week" (*dow*) qui varie de 1 à 8 : lundi = 1, ..., vendredi = 7 et 8 pour les jours fériés.
+* La variable "Day of Week" (*dow*) qui varie de 1 à 8 : lundi = 1, ..., dimanche = 7 et 8 pour les jours fériés.
 
-Ces variables sont ajoutés respectivement par les fonctions **getMeteo** et **getSpecialDays**.
+Ces variables sont ajoutées respectivement par les fonctions **getMeteo** et **getSpecialDays**.
 
 L'ensembles des manipulations décrites dans les trois derniers paragraphes ont été regroupées dans la fonction **BuildDataSet**.
 
@@ -134,31 +165,28 @@ Data[55:60,]
 
 ### Définition de nos séries d'intérêt
 
-Nous avons proposé $3$ série d'interet différentes par région:
+Nous avons proposé $3$ série d'intérêt différentes :
 
- * **nbEstat** : le nombre moyen de vélos par station entrant dans la région à une heure donnée par
+ * **nbEstat** : le nombre moyen de vélos par station entrant dans la région à une heure donnée par district
  
- * **nbSstat** : le nombre moyen de vélos par station sortant de la région à chaquye
+ * **nbSstat** : le nombre moyen de vélos par station sortant de la région à une heure donnée par district
  
- * **diff** = nbEstat - nbStat : la différence entre le nombre de vélos entrant et sortant de chaque région par heure et par station
+ * **diff** = nbEstat - nbStat : la différence entre le nombre de vélos entrant et sortant de chaque région par heure et par district
  
-Nous estimons que cette dernière statistique est la plus utile, car elle peut servir à l'entreprise pour determiner comment elle doit déplacer les vélos entre les différentes régions afin de s'assurer que les stations ne soient jamais complètement vides ou complètement pleines. 
+Nous estimons que cette dernière statistique est la plus utile, car elle permet de déterminer comment les vélos doivent être déplacer entre les différentes régions afin de s'assurer que les stations ne soient jamais soit complètement vides, soit complètement pleines. 
 
 
 ![](Diffplot.png)
 
+Ce premier graphique permet de visualiser la variable **diff**. La forme générale est la même quelque soit l'année : les vélos sont moins empruntés en début d'année (période hivernale - janvier/février) et c'est en été que la différence entrant/sortant est la plus importante. 
 
-Ce premier graphique permet de visualisation la variable représentant la différence entre le nombre de vélos entrant et le nombre de vélos sortant. La forme générale est la même : les vélos sont moins empruntés en début d'année (période hivernale - janvier/février). C'est en été que la différence entrant/sortant est la plus importante. 
-
-Pour bien comprendre la forme de la série, intéressons nous à des séries *nbEstat* et *nbSstat* sur une période de temps restreinte et sur une seule station (la station 9) : soit la deuxième semaine du mois de *juillet 2014*.
-
-Pour réaliser ces graphiques, nous avons utilisé le district 9 qui se trouve en plein centre ville. C'est également le district qui comporte le plus de stations.
+Pour bien comprendre la forme de la série, intéressons-nous à *nbEstat* et *nbSstat* sur une période de temps restreinte (la deuxième semaine du mois de *juillet 2014*) et sur une seule station (la station 9). Le district 9 se situe en plein centre ville et regroupe le plus de stations.
 
 ![](Juillet.png)
 
-On voit en semaine deux grands pics : un premier le matin et un second en fin d'après-midi (voir graphique suivant). Ces pics correspondent aux trajets pour aller et pour revenir du travail. Certaines personnes utilisent également les vélos lors de la pause déjeuner d'où un troisième pic entre les deux plus grands.
+Nous pouvons voir qu'en semaine il y a deux grands pics : un premier le matin (au alentour de 7h) et un second en fin d'après-midi (au alentour de 18h, voir graphique sur le profil journalier). Ces pics correspondent aux trajets pour aller et pour revenir du travail/école. Certaines personnes utilisent également les vélos lors de la pause déjeuner d'où un troisième pic moins important le midi.
 
-Le profil des week-ed est différent, on observe plus le même rythme au niveau du matin et du soir : les vélos sont plutôt utilisés pour se promener dans la ville. 
+Le profil des week-end est différent, nous n'observons plus le même rythme au niveau du matin et du soir : les vélos sont plutôt utilisés pour se promener dans la ville de 10h à 18h. 
 
 Le choix de la station 9 a une influence sur les semaines. En effet, dans les districts du centre de Chicago, on peut voir que le nombre d'entrée et le nombre de sortie est quasiment similaire au cours de la journée. Cela est surement dû au fait que les personnes au coeur de la ville se déplacent entre ces grands districts et que les personnes vivant un peu plus loin du centre viennent le matin travailler.
 
@@ -166,55 +194,50 @@ Pour comprendre le contraste entre les districts de banlieue et les distrits du 
 
 ![](Banlieu.png)
 
-On peut voir que les personnes partent au travail le matin et rentrent le soir. Les interactions avec les autres districts sont plus faibles.
+Nous pouvons supposer que les interactions avec les autres districts sont plus faibles.
 
-Pour finir avec les visualisations, voici le profil d'une journée de semaine type :
+Pour compléter la visualisation hebdomadaire, voici le profil d'une journée de semaine type :
 
 ![](07_juillet.png)
 
-Le premier pic est localisé dans les environs de 7h du matin et le second vers 17h. 
-
 # IV - Les modèles 
 
-On utilisera comme critère de perfomance le critère RMSE (écart-type moyen). Pour nbE_stat , la moyenne des performances est de 0.40, et l'écart type standard est de 0.96 . Ces chiffres nous permettent de constater les perfomances des différents modèles que nous allons présenter. 
+Nous utiliserons comme critère de perfomance le RMSE (écart-type moyen). Pour nbE_stat , la moyenne des performances est de 0.40 et l'écart type standard est de 0.96. Ces chiffres nous permettent de constater les perfomances des différents modèles que nous allons présenter. 
 
 ### Tendance 
 
+Pour commencer, intéressons_nous à la tendance de nos séries. La série **diff** n'ayant pas de tendance par construction (centrée en zéro), nous allons nous concentrer sur les séries **nbEstat** et **nbSstat**. 
+
+Pour ces deux séries, nous voyons un effet multiplicatif de la tendance et de la saisonnalité qui est traduit par l'équation suivante :
 
 **Série = Tendance * Saisonnalité Annuelle * (Saisonnalité Quotidienne + écart ) **
 
-La série **diff** n'a pas de tendance par construction (centrée en zéro). Nous allons donc étudier les séries **nbEstat** et **nbSstat**. On met de côté l'agrégation par district également.
-
-Pour chercher la tendance, nous avons utilisé un modèle linéaire (fonction *lm*). La tendance est représentée par une droite rouge sur les deux graphiques suivants.
+Pour chercher la tendance, nous avons utilisé un modèle linéaire (fonction *lm*). La tendance est représentée par la droite rouge sur les deux graphiques suivants.
 
 ![](Tendance_nbE.png)
 
 ![](Tendance_nbS.png)
 
-Que ce soit pour la variable **nbEstat** ou pour la variable **nbSstat** la tendance est croissante. On a vu précédemment qu'au fur et à mesure du temps, le nombre de vélos entrant ou sortant augmente.
+Que ce soit pour la variable **nbEstat** ou pour la variable **nbSstat**, la tendance est croissante. Nous avons vu précédemment qu'au fur et à mesure du temps, le nombre de vélos entrant ou sortant augmentait.
 
-On corrige nos séries de leurs tendances. En affichant la tendance, (en rouge) on peut vérifier que la tendance de la nouvelle série est constante. 
+Les deux séries se ressemblant beaucoup, nous allons présenté uniquement les résultats pour la variable **nbEstat**.
 
+Le graphique suivant montre la variable corrigée de sa tendance. La courbe rouge est là pour vérifier que nos données corrigées aient bien une tendance nulle.
 
 ![](nbEstat_detrend.png)
 
-![](nbSstat_detrend.png)
-
 ### Saisonnalité
 
-On voit qu'il y a deux saisonnalités dans nos séries : une saisonnalité annuelle et journalière.
+Les visualisations graphiques semblent nous indiquer une double saisonnalité : annuelle et journalière. Pour rechercher la saisonnalité nous avons utilisé la fonction *lm* comme précédemment pour la tendance mais également les modèles additifs généralisés (*gam*). Ces deux méthodes ont aboutit au même résultat.
 
-Dans les graphiques suivant, la courbe rouge représente la saisonnalité annuelle.
+Nous avons commencé par la saisonnalité la plus globale, soit la saisonnalité annuelle qui est visible en rouge sur le graphique suivant :
 
 ![](Saisonnalité_nbE.png)
 
-![](Saisonnalité_nbS.png)
-
-En enlevant la saisonnalité annuelle, on obtient :
+En corrigeant la variable de sa saisonnalité annuelle (en plus de sa tendance), nous obtenons le résultat suivant :
 
 ![](Noseason_nbE.png)
 
-![](Noseason_nbS.png)
 
 ### Modèle GAM 
 
@@ -283,3 +306,8 @@ Table: RMSE pour différents districts pour les modèles locaux et globaux
 Les modèles locaux sont encore plus efficaces que le modèles global.
 
 # V - Conclusion
+
+blablabla
+
+Nous remerçions Monsieur Goude pour nous avoir aider à réaliser ce projet. 
+
