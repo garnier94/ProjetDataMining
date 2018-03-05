@@ -452,7 +452,7 @@ Rémy Garnier - Camille Palmier
 </div>
 <p>Les random forests nous permettent également d’étudier les influences des différentes variables. On peut ainsi supprimer certaines variables, et essayer de voir quelle est l’erreur sans ces variables.</p>
 <table>
-<caption>Significativité des variables du modèle.</caption>
+<caption>RMSE pour différents modèles</caption>
 <thead>
 <tr class="header">
 <th align="center">Modèle</th>
@@ -486,7 +486,40 @@ Rémy Garnier - Camille Palmier
 </tr>
 </tbody>
 </table>
-<p>Il semble donc que la plupart des variables soient prises en compte, mais pas la pluviométrie.</p>
+<p>Il semble donc que la plupart des variables soient significatives, mais pas la pluviométrie. La encore, on peut tester la différence entre modèles locaux et globaux.</p>
+<table>
+<caption>RMSE pour différents districts pour les modèles locaux et globaux</caption>
+<thead>
+<tr class="header">
+<th align="center">District</th>
+<th align="center">Global</th>
+<th align="center">Local</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">2</td>
+<td align="center">0.10</td>
+<td align="center">0.08</td>
+</tr>
+<tr class="even">
+<td align="center">9</td>
+<td align="center">0.53</td>
+<td align="center">0.34</td>
+</tr>
+<tr class="odd">
+<td align="center">12</td>
+<td align="center">0.73</td>
+<td align="center">0.52</td>
+</tr>
+<tr class="even">
+<td align="center">14</td>
+<td align="center">0.14</td>
+<td align="center">0.13</td>
+</tr>
+</tbody>
+</table>
+<p>Les modèles locaux sont encore plus efficaces que le modèles global.</p>
 </div>
 </div>
 <div id="v---conclusion" class="section level1">

@@ -256,6 +256,37 @@ rmse<-function(eps)
 
 rmse(new_data$nbE-lm.forecast)
 
+
+
+
+
+gam_test <- gam(nbEstat_detrend~s(dow,k=8,bs='cc'), data=data_all_nbE)
+summary(gam_test)
+
+plot(data_all_nbE$Time, data_all_nbE$nbEstat_detrend, type='l')
+lines(data_all_nbE$Time, gam_test$fitted.values,col="red")
+
+
+
+w <- which.max(data_all_nbE$nbEstat)
+max_Time <- data_all_nbE$Time[w]
+beg_year <- which(yday(data_all_nbE$Time)==1 & hour(data_all_nbE$Time)==1)
+pic <- which(yday(data_all_nbE$Time)==yday(max_Time) & hour(data_all_nbE$Time)==hour(max_Time))
+triangle<- c(seq(0, 1, length.out=pic[1]-beg_year[1]+2), 
+             seq(1, 0, length.out=beg_year[2]-pic[1]-2),
+             seq(0, 1, length.out=pic[2]-beg_year[2]+2), 
+             seq(1, 0, length.out=beg_year[3]-pic[2]-2),
+             seq(0, 1, length.out=pic[3]-beg_year[3]+2), 
+             seq(1, 0, length.out=nrow(data_all_nbE)-pic[3]))
+
+gam_test <- gam(nbEstat~ti(dow, triangle, bs=c('cc', 'cs')), data=data_all_nbE)
+summary(gam_test)
+plot(data_all_nbE$Time, data_all_nbE$nbEstat, type='l')
+lines(data_all_nbE$Time, gam_test$fitted.values,col="blue")
+
+
+
+
 # Graphiques cool
 #################
 
