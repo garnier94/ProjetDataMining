@@ -154,6 +154,9 @@ rm(sin1,sin2,sin3,sin4,sin5,sin6,sin7,sin8,sin9,sin10,sin11,sin12,sin13,sin14,si
 data_all_nbE <- data_all_nbE[,-c(10:39)]
 data_all_nbS <- data_all_nbS[,-c(10:39)]
 
+
+data_all_nbE <- data_all_nbE[which(data_all_nbE$dow==3),]
+
 rm(w,Nfourier,i,cos,sin,lm0_test,lm1_test,fourier)
 
 ## Deuxième saisonnalité
@@ -206,6 +209,13 @@ lines(lm.fourier_E[[3]]$fitted, col='red')
 
 plot(data_all_nbS$nbSstat_noseason, type='l',ylab="nbSstat_noseason" ,main="Saisonnalité annuelle nbSstat")
 lines(lm.fourier_S[[8]]$fitted, col='red')
+
+periode = which(data_all_nbE$Time >= "2016-02-03" & data_all_nbE$Time < "2016-02-03")
+plot(data_all_nbS[periode,]$nbSstat_noseason, type='l',ylab="nbE_stat" ,main="Saisonnalité journalière pour le 10 novembre 2016")
+lines(lm.fourier_E[[15]]$fitted, col='red')
+legend( x="topright", legend=c("Données corrigées de la tendance et de la saisonnalité annuelle", "Saisonnalité journalière"),
+        col=c("black", "red"), lty=1, cex=0.8)
+
 
 data_all_nbE$nbEstat_end<- data_all_nbE$nbEstat_noseason / lm.fourier_E[[3]]$fitted
 data_all_nbS$nbSstat_end <- data_all_nbS$nbSstat_noseason / lm.fourier_S[[3]]$fitted
