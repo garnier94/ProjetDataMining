@@ -240,21 +240,27 @@ Il semble qu'il reste une part de saisonnalité ne s'expliquant pas (peut être 
 
 #### Saisonnalité journalière:
 
-Pour chaque jour, on peut calculer une saisonnalité par série de Fourier. Notons qu'on ne considère à chaque fois que les jours du même types, afin d'avoir une différence raisonnable . Ici, un zoom permet de constater que les formes des courbes sont relativement semblable.  Ici, en janvier, il semble que la prédiction (en rouge) soit un peu en avance. Cela est peut être du à des phénomènes saisonniers ou à des changements d'heure. 
+Pour chaque jour, nous pouvons calculer une saisonnalité par série de Fourier. Notons que nous ne considèrons à chaque fois que les jours du même type, afin d'avoir une différence raisonnable.
 
-![](Saison2017.png).
+Le graphique suivant représente la saisonnalité journalière (en rouge) sur une semaine de 2017. Les courbes sont relativement semblables. La saisonnalité semble être un peu en avance : c'est sûrement dû a des phénomènes saisonniers ou à des changements d'heure. 
 
-On obtient les résidus suivants pour 2017: 
+![](Saison2017.png)
+
+Les résidus (ce qu'il reste après avec enlever la tendance et les deux saisonnalités) pour 2017 sont les suivants :
 
 ![](Residus.png)
 
-Ces résidus sont assez faible, mais on observe toujours une persistance de la saisonnalité
+Nous observons une saisonnalité dans nos résidus qui n'a pas été capté par notre saisonnalité annuelle ou journalière.
 
-#### Écart
+#### Écarts
 
-Après avoir enlevé la saisonnalité et la tendance, on essaie d'expliquer ces résidus à l'aide d'un modèle additif en fonction de la température et de la pluviométrie.  On peut un modèle additif pour l'ecart avec un modèle multiplicatif. On obtient pour la prévision sur 2017 un RMSE de 0.50 par station pour le premier, et de 0.48 pour le second, qui semble donc meilleur.
+Nous essayons d'expliquer nos résidus par la température et de la pluviométrie à l'aide d'un modèle additif (*gam*).  
 
-Notons que ce RMSE n'est pas exactement comparable aux modèles suivants , puisque qu'il ne tient pas compte du regroupement par districts. Par manque de temsps, nous n'avons pas pu tous les modèles avec la même fonction objectif pour comparer, mais nous y travaillons.
+**??On peut un modèle additif pour l'écart avec un modèle multiplicatif. ??**
+
+Nous obtenons pour la prévision sur 2017, un RMSE de 0.50 par station pour le premier, et de 0.48 pour le second, qui semble donc meilleur.
+
+Notons que ce RMSE n'est pas exactement comparable aux modèles suivants , puisque qu'il ne tient pas compte du regroupement par districts. Par manque de temps, nous n'avons pas pu tous les modèles avec la même fonction objectif pour comparer, mais nous y travaillons.
 
 Sur le graphique suivant nous avons le modèle obtenu avec saisonnalité, tendance et écart en rouge:
 
@@ -336,7 +342,13 @@ Les modèles locaux sont là encore plus efficaces que le modèle global. Par ai
 
 # V - Conclusion
 
-blablabla
+Les systèmes de partage de vélos sont un sujet d'actualité
 
-Nous remercions Monsieur Goude pour nous avoir aider à réaliser ce projet. 
+Nous avons choisi de travailler sur les données de Divvy Bike car les systèmes de partage de vélos sont un sujet au coeur de l'actualité (parisienne). Nous avons apprécié l'accès aux données et leur grand nombre.
+
+Au cours du projet, nous nous sommes rendu compte de l'importance du pré-traitement des données. L'étape de transformation a été trés longue pour deux raisons : la première est conceptuelle et la seconde plus pratique. N'ayant pas de variable à prédire directement présente dans les données, nous avons dû en construire une (trois au final!). Cela nous a demandé de réfléchir d'un côté, à une variable potentiellement intéressante pour DivvyBike et d'un autre à une implémentation dans nos cordes. 
+
+Les modèles statistiques de prévision que nous avons utilisé nous ont permis de comprendre les outils spécifiques aux séries temporelles. 
+
+**FAIRE BILAN SUR LES RESULTATS RMSE**
 
