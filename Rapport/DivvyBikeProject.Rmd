@@ -1,7 +1,7 @@
 ---
 title: <p style="text-align:center";>Divvy Bike Project</p>
 author: <p style="text-align:center";>Rémy Garnier - Camille Palmier</p>
-date: <p style="text-align:center";>28 février 2018</p>
+date: <p style="text-align:center";>9 mars 2018</p>
 output:
   html_document: default
   pdf_document: default
@@ -116,7 +116,7 @@ Nous pouvons voir qu'il y a un fort écart entre les stations les moins utilisé
 
 Nous présenterons dans cette partie les manipulations que nous avons effectuées sur les données. Cette partie représente une bonne partie de notre travail et est donc centrale. Les remarques suivantes permettent de se rendre compte d'une partie des problèmes "simples" que nous avons rencontrés ayant motivés une transformation des données. 
 
-Le format des données est variable au cours des années. Les noms des différents champs, le decoupage temporels, l'organisations des fichier et le format des dates changent souvent. Par ailleurs, la position des stations ainsi que leurs noms peuvent changer d'une année sur l'autre.
+Le format des données est variable au cours des ans. Les noms des différents champs, le découpage temporel, l'organisation des fichiers et le format des dates changent souvent. Par ailleurs, la position des stations ainsi que leurs noms peuvent changer d'une année sur l'autre.
 
 <p>&nbsp; </p>
 
