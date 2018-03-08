@@ -198,11 +198,11 @@ Pour compléter la visualisation hebdomadaire, voici le profil d'une journée de
 
 # IV - Les modèles 
 
-Nous utiliserons comme critère de perfomance le RMSE (écart-type moyen). Pour nbE_stat , la moyenne des performances est de 0.40 et l'écart type standard est de 0.96. Ces chiffres nous permettent de constater les perfomances des différents modèles que nous allons présenter. 
+Nous utiliserons comme critère de perfomance le RMSE (écart-type moyen). 
 
 ### Tendance 
 
-Pour commencer, intéressons-nous à la tendance de nos séries. La série **diff** n'ayant pas de tendance par construction (centrée en zéro), nous allons nous concentrer sur les séries **nbEstat** et **nbSstat**. 
+Pour commencer, intéressons-nous à la tendance de nos séries. La série **diff** n'ayant pas de tendance par construction (centrée en zéro), nous allons nous concentrer sur les séries **nbEstat** et **nbSstat**.  Ici, on regroupe la totalité des stations ensembles afin d'avoir un point de vue général, mais on pourrait également effectuer ces manipulations districts par districts. Par ailleurs, on utilisera les données de 2014,2015 et 2016 pour entrainer le modèle, que l'on testera sur les données de 2017. 
 
 Pour ces deux séries, nous voyons un effet multiplicatif de la tendance et de la saisonnalité qui est traduit par l'équation suivante :
 
@@ -224,6 +224,8 @@ Le graphique suivant montre la variable corrigée de sa tendance. La courbe roug
 
 ### Saisonnalité
 
+#### Saisonnalité Annuelle
+
 Les visualisations graphiques semblent nous indiquer une double saisonnalité : annuelle et journalière. Pour rechercher la saisonnalité nous avons utilisé la fonction *lm* comme précédemment pour la tendance mais également les modèles additifs généralisés (*gam*). Ces deux méthodes ont abouti au même résultat.
 
 Nous avons commencé par la saisonnalité la plus globale, soit la saisonnalité annuelle qui est visible en rouge sur le graphique suivant :
@@ -234,6 +236,31 @@ En corrigeant la variable de sa saisonnalité annuelle (en plus de sa tendance),
 
 ![](Noseason_nbE.png)
 
+Il semble qu'il reste une part de saisonnalité ne s'expliquant pas (peut être n'est-elle pas entièrement multiplicative).
+
+#### Saisonnalité journalière:
+
+Pour chaque jour, on peut calculer une saisonnalité par série de Fourier. Notons qu'on ne considère à chaque fois que les jours du même types, afin d'avoir une différence raisonnable . Ici, un zoom permet de constater que les formes des courbes sont relativement semblable.  Ici, en janvier, il semble que la prédiction (en rouge) soit un peu en avance. Cela est peut être du à des phénomènes saisonniers ou à des changements d'heure. 
+
+![](Saison2017.png).
+
+On obtient les résidus suivants pour 2017: 
+
+![](Residus.png)
+
+Ces résidus sont assez faible, mais on observe toujours une persistance de la saisonnalité
+
+#### Écart
+
+Après avoir enlevé la saisonnalité et la tendance, on essaie d'expliquer ces résidus à l'aide d'un modèle additif en fonction de la température et de la pluviométrie.  On peut un modèle additif pour l'ecart avec un modèle multiplicatif. On obtient pour la prévision sur 2017 un RMSE de 0.50 par station pour le premier, et de 0.48 pour le second, qui semble donc meilleur.
+
+Notons que ce RMSE n'est pas exactement comparable aux modèles suivants , puisque qu'il ne tient pas compte du regroupement par districts. Par manque de temsps, nous n'avons pas pu tous les modèles avec la même fonction objectif pour comparer, mais nous y travaillons.
+
+Sur le graphique suivant nous avons le modèle obtenu avec saisonnalité, tendance et écart en rouge:
+
+**Série = Tendance * Saisonnalité Annuelle * (Saisonnalité Quotidienne + écart ) **
+
+![](modele saison tendace.png)
 
 ### Modèle GAM 
 
