@@ -198,7 +198,7 @@ Pour compléter la visualisation hebdomadaire, voici le profil d'une journée de
 
 # IV - Les modèles 
 
-Nous utiliserons comme critère de perfomance le RMSE (écart-type moyen). 
+Nous utiliserons comme critère de perfomance le RMSE (écart-type moyen). Cela correspond donc l'écart type moyen entre le nombre de vélos empruntés (*nBE*) et notre prédiction.
 
 ### Tendance 
 
@@ -256,11 +256,9 @@ Nous observons une saisonnalité dans nos résidus qui n'a pas été capté par 
 
 Nous essayons d'expliquer nos résidus par la température et de la pluviométrie à l'aide d'un modèle additif (*gam*).  
 
-**??On peut un modèle additif pour l'écart avec un modèle multiplicatif. ??**
+On peut comparer un modèle additif pour l'écart avec un modèle multiplicatif. 
 
-Nous obtenons pour la prévision sur 2017, un RMSE de 0.50 par station pour le premier, et de 0.48 pour le second, qui semble donc meilleur.
-
-Notons que ce RMSE n'est pas exactement comparable aux modèles suivants , puisque qu'il ne tient pas compte du regroupement par districts. Par manque de temps, nous n'avons pas pu tous les modèles avec la même fonction objectif pour comparer, mais nous y travaillons.
+Nous obtenons pour la prévision sur 2017, un RMSE de 294 pour le premier, et de 286 pour le second, qui semble donc meilleur.
 
 Sur le graphique suivant nous avons le modèle obtenu avec saisonnalité, tendance et écart en rouge:
 
@@ -284,7 +282,7 @@ Nous avons effectué quelques manipulations de donnée supplémentaires afin de 
  
  * Par ailleurs, nous avons identifié les périodes les plus actives (de 7 à 8h et de 16 à 18h en semaine) par une variable spéciale.
 
-Le modèle obtenu n'est pas très efficace, et on obtient un RMSE de 0.744.
+On obtient un RMSE de *265*, ce qui améliore un peu les méthodes précédentes.
 
 #### Un second modèle :
 
@@ -297,7 +295,7 @@ En utilisant les mêmes hyper-paramètres que précedemment, on peut essayer de 
    12         1.92           1.18           
    14         0.31           0.34   
 
-Table: RMSE pour différents districts pour les modèles locaux et globaux
+Table: RMSE par station pour différents districts pour les modèles locaux et globaux
 
 On représente sur les graphiques suivant *nbEstat* (en rouge) ainsi que sa prédiction (en noir) entre le 4 et le 12 septembre 2017. On remarque que la prévision semble moins bonne pour le 4 septembre, qui est un jour férié. 
 
@@ -306,7 +304,7 @@ On représente sur les graphiques suivant *nbEstat* (en rouge) ainsi que sa pré
 
 ### Random Forests
 
-Un modèle que nous avons utilisé est celui des random forests du package *Random Forests*. On utilise les données de 2014 à 2016 pour entraîner le modèle, et on calculera les erreurs sur les données de 2017. Ce modèle est assez simple à implémenter et obtient de très bons résultats. Cependant, il est un peu coûteux en temps de calcul. En utilisant 10 arbres, on obtient pour la prévision de *nbEstat* un RMSE  de *0.305*. 
+Un modèle que nous avons utilisé est celui des random forests du package *Random Forests*. On utilise les données de 2014 à 2016 pour entraîner le modèle, et on calculera les erreurs sur les données de 2017. Ce modèle est assez simple à implémenter et obtient de très bons résultats. Cependant, il est un peu coûteux en temps de calcul. En utilisant 10 arbres, on obtient pour la prévision de *nbEstat* un RMSE  de *109*. 
 
 Sur les graphiques suivants, on a représenté les résultats de ce modèle pour différents districts :
 
@@ -316,14 +314,13 @@ Les random forests nous permettent également d'étudier les influences des diff
 
   Modèle                         RMSE   
  ----------------------------   ------------       
-  Complet                       0.305                    
-  Sans Données géographiques    0.850                    
-  Sans la température           0.487            
-  Sans le type de jours         0.405
-  Sans les différentes années   0.322
-  Sans la pluviométrie          0.305
+  Complet                       109                   
+  Sans Données géographiques    152                   
+  Sans la température           149            
+  Sans le type de jours         180
+  Sans la pluviométrie          123
    
-Table:  RMSE pour différents modèles
+Table:  RMSE par stations pour différents modèles
 
 Il semble donc que la plupart des variables soient significatives, mais pas la pluviométrie. Notons au passage que le découpage géographique semble pertinent, puisque l'écart si l'on considère que toutes les stations se comportent de manière identiques est plus important.  
 
@@ -348,7 +345,7 @@ Nous avons choisi de travailler sur les données de Divvy Bike car les systèmes
 
 Au cours du projet, nous nous sommes rendu compte de l'importance du pré-traitement des données. L'étape de transformation a été trés longue pour deux raisons : la première est conceptuelle et la seconde plus pratique. N'ayant pas de variable à prédire directement présente dans les données, nous avons dû en construire une (trois au final!). Cela nous a demandé de réfléchir d'un côté, à une variable potentiellement intéressante pour DivvyBike et d'un autre à une implémentation dans nos cordes. 
 
-Les modèles statistiques de prévision que nous avons utilisé nous ont permis de comprendre les outils spécifiques aux séries temporelles. 
+Les modèles statistiques de prévision que nous avons utilisé nous ont permis de comprendre les outils spécifiques aux séries temporelles. Nous sommes parvenus à des erreurs relativement faible(moins de 109 vélos par heure), mais qui sont à notre avis perfectible. Une piste d'amélioration possible est de trouver un meilleur découpage géographique, qui tiendrait par exemple compte des données sociologiques et des habitudes de transport. 
 
-**FAIRE BILAN SUR LES RESULTATS RMSE**
+
 
