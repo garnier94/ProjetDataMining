@@ -10,6 +10,18 @@ library(DivvyBikeProject)
 library(lubridate)
 library(tidyverse)
 
+
+rmse_spec <- function(data_in,prediction)
+{
+  data0 <- data_in
+  data0$prediction <- prediction
+  data0$prediction <- data0$prediction *data0$nb_stations
+  data_g <- summarise(group_by(data0, Time), nbE = sum(nbE), pred= sum(prediction))
+  return(rmse(data_g$nbE, data_g$pred))
+}
+
+
+
 #chargement des donnees
 load("~/StatML/Projet/ProjetDataMining/FullData2014.RData")
 data_2014 <- Data
@@ -60,6 +72,8 @@ rmse(datatest$nbEstat, rf1.fitted)
 #0.36 maintenant
 #0.305 avec 10 tree
 #0.85 sans les districts(mistake)
+rmse_spec(datatest, as.vector(rf1.fitted)) #123
+
 
 list_district = c(2,9,14,12)
 par(mfrow=c(2,2))
@@ -110,6 +124,8 @@ rf0 <- randomForest(eq, ntree=5, data=datatrain, importance=FALSE)
 rf0.fitted <- predict(rf0,newdata=datatest)
 rmse(datatest$nbSstat, rf0.fitted)
 #0.248
+rmse_spec(datatest, as.vector(rf1.fitted))
+#123
 
 #=================sans temp
 eq <- nbSstat ~  Week  + dow  + Hour + Year +district +pluvio
@@ -117,6 +133,8 @@ rf0 <- randomForest(eq, ntree=5, data=datatrain, importance=FALSE)
 rf0.fitted <- predict(rf0,newdata=datatest)
 rmse(datatest$nbSstat, rf0.fitted)
 #0.407
+rmse_spec(datatest, as.vector(rf0.fitted))
+#149
 
 #=================sans district
 eq <- nbEstat ~  Week  + dow  + Hour + Year  +pluvio +temp
@@ -131,6 +149,8 @@ rf0 <- randomForest(eq, ntree=5, data=datatrain, importance=FALSE)
 rf0.fitted <- predict(rf0,newdata=datatest)
 rmse(datatest$nbSstat, rf0.fitted)
 #0.405
+rmse_spec(datatest, as.vector(rf0.fitted))
+#180
 
 #=================sans Year
 eq <- nbSstat ~  Week + dow  + temp  + Hour  + district + pluvio
@@ -138,6 +158,8 @@ rf0 <- randomForest(eq, ntree=5, data=datatrain, importance=FALSE)
 rf0.fitted <- predict(rf0,newdata=datatest)
 rmse(datatest$nbSstat, rf0.fitted)
 #0.322
+rmse_spec(datatest, as.vector(rf0.fitted))
+#109
 
 #=================== Groupement géo dis_9
 eq <- nbEstat ~  Week  + dow  + Hour + Year  +pluvio +temp

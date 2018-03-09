@@ -27,6 +27,15 @@ plotperiod <- function( data_in,data_in_spe, data_used , min_date, max_date , ti
 }
 
 
+rmse_spec <- function(data_in,prediction)
+{
+  data0 <- data_in
+  data0$prediction <- prediction
+  data0$prediction <- data0$prediction *data0$nb_stations
+  data_g <- summarise(group_by(data0, Time), nbE = sum(nbE), pred= sum(prediction))
+  return(rmse(data_g$nbE, data_g$pred))
+}
+
 ###=======================================================================================================================================
 #chargement des donnees
 load("~/StatML/Projet/ProjetDataMining/FullData2014.RData")
@@ -140,10 +149,10 @@ datatrain$districtpos <- AddPos(datatrain, list_dist)
 datatest$districtpos <- AddPos(datatest, list_dist)
 
 #---------------------------------------------------------
-equation <- nbEstat~s(Week,k=8)+s(Hour,k = 12) + te(Hour, temp, k=c(3, 5)) + s(districtpos, k=20)+ s(temp)+pluvio + pic
+equation <- nbEstat~s(Week,k=10)+s(Hour,k = 12) + te(Hour, temp, k=c(3, 5)) + s(districtpos, k=20)+ s(temp)+pluvio + pic
 gamexp<-gam(equation, data=datatrain) 
 gamexp$forecast <- predict(gamexp, newdata=datatest)
-rmse(gamexp$forecast, datatest$nbEstat)
+rmse(gamexp$forecast , datatest$nbEstat )
 
 plotperiod(datatest ,datatest$nbEstat, gamexp$forecast , "2017-09-04", "2017-09-10" , title = "diff", couleur = 'blue', stat = 9)
 
@@ -154,6 +163,8 @@ plotperiod(datatest ,datatest$nbEstat, gamexp$forecast , "2017-09-04", "2017-09-
 
 plot(gamexp)
 
+rmse_spec(datatest, as.vector(gamexp$forecast))
+ # 265
 
 #---------------------------------------------------------
 equation <- nbEstat ~ s(Week,k=8)+s(Hour,k = 20) + te(Hour, temp, k=c(5, 5)) + s(districtpos, k=20)+ s(temp)+s(pluvio,k=3) +s(pic, k=3)
@@ -180,6 +191,7 @@ plotperiod(datatest ,datatest$nbEstat, gamexp$forecast , "2017-09-04", "2017-09-
 #0.746 sans Year
 
 plot(gamexp)
+
 
 
 
